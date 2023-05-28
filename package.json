@@ -1,0 +1,6 @@
+{
+  "name": "@wyvr/package-devtools",
+  "dependencies": {
+    "perfume.js": "^9.0.0-rc.3"
+  }
+}
