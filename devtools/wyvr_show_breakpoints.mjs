@@ -16,6 +16,10 @@ export default {
         if (!is_active) {
             is_active = true;
             const { width_breakpoints } = get_breakpoints();
+            if(!width_breakpoints || width_breakpoints.length == 0) {
+                wyvr_message('no breakpoints available');
+                return;
+            }
             component = new Breakpoints({ target, props: { breakpoints: width_breakpoints } });
         } else {
             is_active = false;
