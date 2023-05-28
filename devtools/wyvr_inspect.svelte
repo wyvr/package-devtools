@@ -16,6 +16,9 @@
         hydrate_components.map((el) => {
             el.addEventListener('click', inspect);
         });
+        if(hydrate_components.length == 0) {
+            wyvr_message('no elements to inspect available');
+        }
         document.body.classList.add('wyvr_inspect_outline');
         addEventListener('mousemove', mousemove);
         addEventListener('mouseup', mouseup);
