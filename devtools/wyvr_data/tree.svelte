@@ -1,0 +1,212 @@
+<script>
+    export let data;
+    export let path = '';
+    export let highlight = undefined;
+    export let searching = false;
+    export let open = false;
+
+    $: tree = data
+        ? Object.keys(data).map((key) => {
+              let type = typeof data[key];
+              if (type == 'object' && Array.isArray(data[key])) {
+                  type = 'array';
+              }
+              return { key, value: data[key], type };
+          })
+        : [];
+
+
+    $: update_open(searching);
+
+    function get_path(path, segment) {
+        if (!isNaN(segment)) {
+            return path + '[' + segment + ']';
+        }
+        return [path, segment].filter((x) => x).join('.');
+    }
+
+    function get_type_icon(type, value) {
+        switch (type) {
+            case 'string':
+                return 'T';
+            case 'number':
+                return 'N';
+            case 'boolean':
+                return '☑';
+            case 'array':
+                return `[${value ? value.length : '0'}]`;
+            case 'object':
+                return '{…}';
+            default:
+                return '?';
+        }
+    }
+
+    function toggle() {
+        open = !open;
+    }
+
+    function copy(text) {
+        if (typeof text == 'string') {
+            text = text.replace(/^"(.*)"$/, '$1');
+        }
+        navigator.clipboard.writeText(text).then(() => {
+            wyvr_message('copied to clipboard');
+        });
+    }
+    function copy_pre(e) {
+        const pre = e.target.parentNode.querySelector('pre');
+        if (!pre) {
+            return;
+        }
+        copy(pre.innerText);
+    }
+    function get_text(text, highlight) {
+        text = text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        if (!highlight) {
+            return text;
+        }
+        return text.replace(new RegExp('(' + highlight + ')', 'gi'), '<span class="highlight">$1</span>');
+    }
+    function update_open(searching) {
+        if(searching) {
+            open = true;
+        }
+    }
+</script>
+
+<div class="tree">
+    <button on:click={toggle} class="btn"
+        >{#if open}-{:else}+{/if}</button
+    >
+    {#if open}
+        {#each tree as node}
+            {@const cur_path = get_path(path, node.key, node.type)}
+            <div class="node">
+                <button
+                    class="key"
+                    title={cur_path}
+                    on:click={() => {
+                        copy(cur_path);
+                    }}
+                >
+                    {@html get_text(node.key, highlight)}
+                    <span class="icon">{get_type_icon(node.type, node.value)}</span>
+                </button>
+                <div class="value">
+                    {#if node.type == 'string' || node.type == 'boolean' || node.type == 'number'}
+                        <button on:click={copy_pre} class="btn">copy</button>
+                        <pre>{@html get_text(JSON.stringify(node.value, null, 4), highlight)}</pre>
+                    {:else if node.type == 'array'}
+                        <svelte:self data={node.value} path={cur_path} {highlight} {searching} />
+                    {:else if node.type == 'object'}
+                        <svelte:self data={node.value} path={cur_path} {highlight} {searching} />
+                    {:else}
+                        UNKNOWN {node.type}
+                    {/if}
+                </div>
+            </div>
+        {/each}
+    {/if}
+</div>
+
+<style>
+    .tree {
+        width: fit-content;
+    }
+    .tree :global(.highlight) {
+        background-color: var(--wyvr-debug-primary);
+        color: var(--wyvr-debug-text);
+        display: inline-block;
+        padding: 1px;
+        border-radius: 1px;
+    }
+    .node {
+        padding-left: 30px;
+        padding-top: 5px;
+        padding-bottom: 5px;
+        display: flex;
+        flex-direction: row;
+        width: 100%;
+        align-items: baseline;
+        position: relative;
+    }
+    .node:hover {
+    }
+    .node:before {
+        content: '';
+        position: absolute;
+        left: 12px;
+        top: 0;
+        height: 100%;
+        width: 2px;
+        background-color: var(--line-color);
+    }
+    .node:last-child::before {
+        height: 19px;
+    }
+    .node:after {
+        content: '';
+        position: absolute;
+        left: 14px;
+        top: 17px;
+        height: 2px;
+        width: 16px;
+        background-color: var(--line-color);
+    }
+    .key {
+        display: inline-block;
+        margin-right: 10px;
+        white-space: nowrap;
+        border: 1px solid var(--wyvr-debug-text);
+        border-radius: calc(var(--size) * 0.25);
+        padding-left: calc(var(--size) * 0.5);
+        padding-right: calc(var(--size) * 0.5);
+        font-family: monospace;
+        background-color: var(--wyvr-debug-text);
+        color: var(--wyvr-debug-text-shadow);
+        font-size: var(--wyvr-debug-font-size);
+        cursor: pointer;
+    }
+    .icon {
+        font-family: serif;
+        display: inline-block;
+        background-color: rgba(0, 0, 0, 0.2);
+        padding: calc(var(--size) * 0.1) calc(var(--size) * 0.25);
+        margin-right: calc(var(--size) * -0.5);
+    }
+    pre {
+        padding: 0;
+        margin: 0;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        max-width: 500px;
+    }
+    .btn {
+        font-size: var(--wyvr-debug-font-size);
+        font-family: monospace;
+        background: var(--wyvr-debug-bg);
+        border: 1px solid var(--wyvr-debug-primary);
+        color: var(--wyvr-debug-primary);
+        cursor: pointer;
+        border-radius: var(--radius);
+        padding: calc(var(--size) * 0.1) calc(var(--size) * 0.5);
+        border-radius: calc(var(--size) * 0.25);
+    }
+    .value {
+        position: relative;
+        flex: 0 1 auto;
+        overflow: hidden;
+        min-height: 1.4em;
+    }
+    .value > .btn {
+        position: absolute;
+        top: 0;
+        right: 0;
+        opacity: 0;
+        transition: opacity 0.2s linear !important;
+    }
+    .value:hover > .btn {
+        opacity: 1;
+    }
+</style>
