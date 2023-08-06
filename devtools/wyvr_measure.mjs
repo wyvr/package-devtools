@@ -12,6 +12,7 @@ export default {
     description: 'get performance data from the current page',
     onMount: () => {
         if (is_active) {
+            
             target = document.createElement('div');
             target.classList.add('wyvr_measure');
             document.body.appendChild(target);
