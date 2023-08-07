@@ -192,6 +192,8 @@
         border-radius: var(--radius);
         padding: calc(var(--size) * 0.1) calc(var(--size) * 0.5);
         border-radius: calc(var(--size) * 0.25);
+        text-align: center;
+        min-width: 24px;
     }
     .value {
         position: relative;
