@@ -8,7 +8,7 @@
     const tabs = ['Data', 'Structure'];
     let active = tabs[0];
     let term;
-    let height = 200;
+    let height = 400;
     let searching = false;
     let not_found = false;
 
