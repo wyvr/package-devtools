@@ -170,7 +170,7 @@
                     <div class="block">
                         <Tree data={data.props} open={true}
                             ><div class="headline">
-                                <span class="icon">🛠</span><span class="text">Props</span>
+                                <span class="icon">🔧</span><span class="text">Props</span>
                             </div></Tree
                         >
                     </div>
