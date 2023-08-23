@@ -1,7 +1,7 @@
 <script>
     import { onDestroy, onMount } from 'svelte';
-    import WyvrInspectRow from './wyvr_inspect/row.svelte';
-    import { get_parent_node } from './wyvr_inspect/helper.mjs';
+    import { get_parent_node, search } from './wyvr_inspect/helper.js';
+    import Tree from './wyvr_data/tree.svelte';
 
     let hydrate_components = [];
     let active_component;
@@ -10,13 +10,14 @@
     let show = true;
     let x = 10;
     let y = 10;
+    let container;
     onMount(() => {
         reset_data();
         hydrate_components = Array.from(document.querySelectorAll('[data-hydrate]'));
         hydrate_components.map((el) => {
             el.addEventListener('click', inspect);
         });
-        if(hydrate_components.length == 0) {
+        if (hydrate_components.length == 0) {
             wyvr_message('no elements to inspect available');
         }
         document.body.classList.add('wyvr_inspect_outline');
@@ -57,34 +58,31 @@
         };
 
         const props = await wyvr_props(target);
-        if (props) {
-            const props_keys = Object.keys(props);
-            if (props_keys.length > 0) {
-                active_data.props_keys = props_keys;
-                active_data.props = props;
-            }
-        }
+        active_data.props = props;
 
         if (!structure) {
             structure = await wyvr_devtools_inspect_structure_data();
         }
         if (structure) {
-            const search_result = [].concat(
-                search(structure.doc, active_data.path.replace(/^@[src]{3}\//, '')),
-                search(structure.layout, active_data.path.replace(/^@[src]{3}\//, '')),
-                search(structure.page, active_data.path.replace(/^@[src]{3}\//, ''))
-            );
-            const struc = search_result[0];
+            const active_data_path = active_data.path.replace(/^@src\//, 'src/');
+            const search_result = []
+                .concat(
+                    search(structure.doc, active_data_path),
+                    search(structure.layout, active_data_path),
+                    search(structure.page, active_data_path)
+                )
+                .filter(Boolean);
             if (search_result.length > 0) {
-                if (struc) {
-                    if (struc.pkg) {
-                        active_data.pkg = struc.pkg;
-                    }
-                    if (struc.config) {
-                        active_data.config = struc.config;
-                        active_data.config_keys = Object.keys(struc.config);
-                    }
+                const struc = search_result[0];
+                console.log(struc);
+                if (struc.pkg) {
+                    active_data.pkg = struc.pkg;
                 }
+                if (struc.config) {
+                    active_data.config = struc.config;
+                }
+            } else {
+                console.warn('component', active_data.path, 'could not be found');
             }
         }
 
@@ -96,31 +94,14 @@
             name: undefined,
             path: undefined,
             props: undefined,
-            props_keys: [],
             config: undefined,
-            config_keys: [],
             pkg: undefined,
         };
     }
 
-    function search(node, name) {
-        if (!node || typeof node != 'object') {
-            return [];
-        }
-        if (node.file == name) {
-            return [node];
-        }
-        if (Array.isArray(node.components) && node.components.length > 0) {
-            return node.components
-                .map((entry) => search(entry, name))
-                .filter((x) => x)
-                .flat();
-        }
-        return [];
-    }
-
     function toggle() {
         show = !show;
+        setTimeout(() => moveto(x, y), 10);
     }
 
     let moving = false;
@@ -129,9 +110,13 @@
     }
     function mousemove(e) {
         if (moving) {
-            x = Math.max(x + e.movementX, 0);
-            y = Math.max(y + e.movementY, 0);
+            moveto(x + e.movementX, y + e.movementY);
         }
+    }
+    function moveto(new_x, new_y) {
+        const rect = container?.getBoundingClientRect();
+        x = Math.max(Math.min(new_x, window.innerWidth - rect.width), 0);
+        y = Math.max(Math.min(new_y, window.innerHeight - rect.height), 0);
     }
 </script>
 
@@ -144,7 +129,7 @@
 />
 
 {#if active_component && data}
-    <div class="sidebar" style="--x: {x}px; --y: {y}px;">
+    <div class="sidebar" bind:this={container} style="--x: {x}px; --y: {y}px;">
         <div
             class="drag topbar"
             on:mousedown={() => {
@@ -154,49 +139,52 @@
             <button
                 on:click={() => {
                     trigger('wyvr_inspect_close');
-                }} title="close">⨯</button
+                }}
+                title="close">⨯</button
             >
             <button on:click={toggle} title={show ? 'hide' : 'show'}
                 >{#if show}_{:else}☐{/if}</button
             >
         </div>
         {#if show}
-            <div class="block">
-                <div class="headline"><span class="icon">🔍</span><span class="text">Component</span></div>
-                <table>
-                    <WyvrInspectRow key={data.name} value={data.path} />
-                </table>
-            </div>
-            <div class="block">
-                <div class="headline"><span class="icon">📦</span><span class="text">Package</span></div>
-                {#if data.pkg}
-                    <table>
-                        <WyvrInspectRow key={data.pkg.name} value={data.pkg.path} />
-                    </table>
-                {:else}
-                    <em>no package found</em>
+            <div class="inner">
+                <div class="block">
+                    <Tree data={{ name: data.name, path: data.path }} open={true}
+                        ><div class="headline">
+                            <span class="icon">🔍</span><span class="text">Component</span>
+                        </div></Tree
+                    >
+                </div>
+                <div class="block">
+                    {#if data.pkg}
+                        <Tree data={data.pkg} open={true}
+                            ><div class="headline">
+                                <span class="icon">📦</span><span class="text">Package</span>
+                            </div></Tree
+                        >
+                    {:else}
+                        <em>no package found</em>
+                    {/if}
+                </div>
+                {#if data.props}
+                    <div class="block">
+                        <Tree data={data.props} open={true}
+                            ><div class="headline">
+                                <span class="icon">🛠</span><span class="text">Props</span>
+                            </div></Tree
+                        >
+                    </div>
+                {/if}
+                {#if data.config}
+                    <div class="block">
+                        <Tree data={data.config} open={true}
+                            ><div class="headline">
+                                <span class="icon">⚙</span><span class="text">Config</span>
+                            </div></Tree
+                        >
+                    </div>
                 {/if}
             </div>
-            {#if data.props && data.props_keys}
-                <div class="block">
-                    <div class="headline"><span class="icon">🛠</span><span class="text">Props</span></div>
-                    <table>
-                        {#each data.props_keys as key}
-                            <WyvrInspectRow {key} value={data.props[key]} type={'json'} />
-                        {/each}
-                    </table>
-                </div>
-            {/if}
-            {#if data.config}
-                <div class="block">
-                    <div class="headline"><span class="icon">⚙</span><span class="text">Config</span></div>
-                    <table>
-                        {#each data.config_keys as key}
-                            <WyvrInspectRow {key} value={data.config[key]} type={'config'} />
-                        {/each}
-                    </table>
-                </div>
-            {/if}
         {/if}
     </div>
 {/if}
@@ -219,14 +207,14 @@
         backdrop-filter: blur(3px);
         max-height: 80vh;
         max-width: 80vw;
-        overflow: auto;
         min-width: 200px;
-        box-shadow: 0 5px 10px rgba(0,0,0,0.5);
+        box-shadow: 0 5px 10px rgba(0, 0, 0, 0.5);
         color: var(--wyvr-debug-text);
+        display: flex;
+        flex-direction: column;
     }
 
     .headline {
-        padding-bottom: 10px;
         font-weight: 700;
     }
     .headline .icon {
@@ -235,6 +223,7 @@
     .topbar {
         display: flex;
         flex-direction: row-reverse;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.3);
     }
     .topbar button {
         padding: 5px 20px;
@@ -244,6 +233,10 @@
         color: var(--wyvr-debug-primary);
         font-size: var(--wyvr-debug-size);
         cursor: pointer;
+    }
+    .inner {
+        overflow: auto;
+        flex-grow: 1;
     }
     .block {
         border-top: 1px solid rgba(255, 255, 255, 0.3);
@@ -256,6 +249,9 @@
         outline: 2px solid var(--wyvr-inspect-outline);
         min-width: 10px;
         min-height: 10px;
+    }
+    :global(.wyvr_inspect_outline [data-hydrate] *) {
+        pointer-events: none;
     }
     :global(.wyvr_inspect_outline [data-hydrate]:hover) {
         outline: 2px solid var(--wyvr-inspect-outline-active);
