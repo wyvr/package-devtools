@@ -15,7 +15,6 @@
           })
         : [];
 
-
     $: update_open(searching);
 
     function get_path(path, segment) {
@@ -69,16 +68,18 @@
         return text.replace(new RegExp('(' + highlight + ')', 'gi'), '<span class="highlight">$1</span>');
     }
     function update_open(searching) {
-        if(searching) {
+        if (searching) {
             open = true;
         }
     }
 </script>
 
 <div class="tree">
-    <button on:click={toggle} class="btn"
-        >{#if open}-{:else}+{/if}</button
-    >
+    <div class="main">
+        <button on:click={toggle} class="btn"
+            >{#if open}-{:else}+{/if}</button
+        ><slot />
+    </div>
     {#if open}
         {#each tree as node}
             {@const cur_path = get_path(path, node.key, node.type)}
@@ -120,6 +121,11 @@
         display: inline-block;
         padding: 1px;
         border-radius: 1px;
+    }
+    .main {
+        display: flex;
+        gap: 10px;
+        align-items: flex-end;
     }
     .node {
         padding-left: 30px;
