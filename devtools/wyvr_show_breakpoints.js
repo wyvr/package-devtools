@@ -16,7 +16,7 @@ export default {
         if (!is_active) {
             is_active = true;
             const { width_breakpoints } = get_breakpoints();
-            if(!width_breakpoints || width_breakpoints.length == 0) {
+            if (!width_breakpoints || width_breakpoints.length == 0) {
                 wyvr_message('no breakpoints available');
                 return;
             }
@@ -25,14 +25,6 @@ export default {
             is_active = false;
             component.$destroy();
         }
-        // const html = document.querySelector('html');
-        // if (html.classList.contains('wyvr_show_breakpoints')) {
-        //     wyvr_message('hide breakpoints');
-        //     html.classList.remove('wyvr_show_breakpoints');
-        //     return;
-        // } else {
-        //     html.classList.add('wyvr_show_breakpoints');
-        // }
     },
 };
 
@@ -54,15 +46,9 @@ function get_breakpoints() {
                     width_breakpoints.push(parseFloat(match[1]));
                     return;
                 }
-                // match = media_item.match(/\(?(?:min|max)-height:\s*(\d*)px\)?/);
-                // if (match) {
-                //     height_breakpoints.push(parseFloat(match[1]));
-                //     return;
-                // }
             });
         });
     width_breakpoints = width_breakpoints.filter((item, index) => width_breakpoints.indexOf(item) == index);
     height_breakpoints = height_breakpoints.filter((item, index) => height_breakpoints.indexOf(item) == index);
     return { width_breakpoints, height_breakpoints };
 }
-

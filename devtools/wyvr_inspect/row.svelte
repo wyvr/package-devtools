@@ -1,6 +1,5 @@
 <script>
-    import { onMount } from 'svelte';
-    import { get_parent_node } from './wyvr_inspect/helper.mjs';
+    import { get_parent_node } from './helper.mjs';
 
     export let key;
     export let value;
