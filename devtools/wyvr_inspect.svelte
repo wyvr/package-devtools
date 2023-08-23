@@ -1,6 +1,6 @@
 <script>
     import { onDestroy, onMount } from 'svelte';
-    import WyvrInspectRow from './wyvr_inspect_row.svelte';
+    import WyvrInspectRow from './wyvr_inspect/row.svelte';
     import { get_parent_node } from './wyvr_inspect/helper.mjs';
 
     let hydrate_components = [];

@@ -3,7 +3,6 @@
     import Tree from './wyvr_data/tree.svelte';
 
     let data;
-    let global;
     let structure;
     const tabs = ['Data', 'Structure'];
     let active = tabs[0];
@@ -16,9 +15,6 @@
         wyvr_devtools_inspect_data().then((result) => {
             data = result;
         });
-        // wyvr_devtools_inspect_global_data().then((result) => {
-        //     global = result;
-        // });
         wyvr_devtools_inspect_structure_data().then((result) => {
             structure = result;
         });
