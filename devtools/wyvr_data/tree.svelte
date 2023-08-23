@@ -35,6 +35,10 @@
             case 'array':
                 return `[${value ? value.length : '0'}]`;
             case 'object':
+            case 'undefined':
+                if (value == null) {
+                    return '✘';
+                }
                 return '{…}';
             default:
                 return '?';
@@ -62,6 +66,10 @@
     }
     function get_text(text, highlight) {
         text = text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        if (text.match(/^".*"$/)) {
+            return text;
+        }
+        text = `<code>${text}</code>`;
         if (!highlight) {
             return text;
         }
@@ -101,7 +109,15 @@
                     {:else if node.type == 'array'}
                         <svelte:self data={node.value} path={cur_path} {highlight} {searching} />
                     {:else if node.type == 'object'}
-                        <svelte:self data={node.value} path={cur_path} {highlight} {searching} />
+                        {#if node.value == null}
+                            <pre><code>null</code></pre>
+                        {:else if Object.keys(node.value).length == 0}
+                            <pre><code>empty</code></pre>
+                        {:else}
+                            <svelte:self data={node.value} path={cur_path} {highlight} {searching} />
+                        {/if}
+                    {:else if node.type == 'undefined'}
+                        <pre><code>undefined</code></pre>
                     {:else}
                         UNKNOWN {node.type}
                     {/if}
@@ -187,6 +203,9 @@
         text-overflow: ellipsis;
         overflow: hidden;
         max-width: 500px;
+    }
+    pre :global(code) {
+        color: var(--wyvr-debug-primary);
     }
     .btn {
         font-size: var(--wyvr-debug-font-size);
