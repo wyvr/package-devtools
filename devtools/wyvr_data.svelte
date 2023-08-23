@@ -125,9 +125,13 @@
             {#if not_found}
                 <em>nothing found for "<b>{term}</b>"</em>
             {:else if active == 'Data'}
-                <Tree data={filtered_data} open={true} path="data" highlight={term} {searching} />
+                <Tree data={filtered_data} open={true} path="data" highlight={term} {searching}
+                    ><span class="icon">🗃️</span> Data</Tree
+                >
             {:else if active == 'Structure'}
-                <Tree data={filtered_structure} open={true} highlight={term} {searching} />
+                <Tree data={filtered_structure} open={true} highlight={term} {searching}
+                    ><span class="icon">🏗️</span> Structure</Tree
+                >
             {/if}
         </div>
     </div>
@@ -184,7 +188,7 @@
         flex-grow: 1;
     }
     .tabs input:focus {
-        background: rgba(255,255,255,0.1);
+        background: rgba(255, 255, 255, 0.1);
     }
     .tabs button.active {
         color: var(--wyvr-debug-text);
