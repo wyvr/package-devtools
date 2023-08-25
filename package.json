@@ -1,7 +1,12 @@
 {
-  "name": "@wyvr/package-devtools",
-  "type": "module",
-  "dependencies": {
-    "perfume.js": "^9.0.0-rc.3"
-  }
+    "name": "@wyvr/package-devtools",
+    "type": "module",
+    "keywords": [
+        "wyvr",
+        "package",
+        "devtools"
+    ],
+    "dependencies": {
+        "perfume.js": "^9.0.0-rc.3"
+    }
 }
