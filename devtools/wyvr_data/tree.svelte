@@ -6,13 +6,23 @@
     export let open = false;
 
     $: tree = data
-        ? Object.keys(data).map((key) => {
-              let type = typeof data[key];
-              if (type == 'object' && Array.isArray(data[key])) {
-                  type = 'array';
-              }
-              return { key, value: data[key], type };
-          })
+        ? Object.keys(data)
+              .map((key) => {
+                  let type = typeof data[key];
+                  if (type == 'object' && Array.isArray(data[key])) {
+                      type = 'array';
+                  }
+                  return { key, value: data[key], type };
+              })
+              .sort((a, b) => {
+                  if (a.key < b.key) {
+                      return -1;
+                  }
+                  if (a.key > b.key) {
+                      return 1;
+                  }
+                  return 0;
+              })
         : [];
 
     $: update_open(searching);
