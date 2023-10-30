@@ -186,6 +186,7 @@
         background: transparent;
         padding: 0 10px;
         flex-grow: 1;
+        color: var(--wyvr-debug-text);
     }
     .tabs input:focus {
         background: rgba(255, 255, 255, 0.1);
