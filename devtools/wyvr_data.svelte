@@ -10,13 +10,18 @@
     let height = 400;
     let searching = false;
     let not_found = false;
+    let search_term;
+    let state = 'busy';
+    $: get_term(term);
 
     onMount(() => {
         wyvr_devtools_inspect_data().then((result) => {
             data = result;
+            state = 'idle';
         });
         wyvr_devtools_inspect_structure_data().then((result) => {
             structure = result;
+            state = 'idle';
         });
 
         addEventListener('mousemove', mousemove);
@@ -28,31 +33,40 @@
     });
 
     $: loaded = data && structure;
-    let filtered_data;
-    $: start_search(term, data).then((result) => {
-        filtered_data = result.data;
-        searching = result.searching;
-        not_found = searching && !filtered_data;
-    });
-    let filtered_structure;
-    $: start_search(term, structure).then((result) => {
-        filtered_structure = result.data;
-        searching = result.searching;
-        not_found = searching && !filtered_data;
-    });
 
-    let search_timer;
-    async function start_search(term, data) {
-        return new Promise((resolve) => {
+    let term_debouncer;
+    function get_term(term) {
+        state = 'busy';
+        clearTimeout(term_debouncer);
+        term_debouncer = setTimeout(() => {
+            search_term = term;
+            console.log(search_term);
+            start_search(search_term).finally(() => {
+                state = 'idle';
+            });
+        }, 500);
+    }
+
+    let filtered_data;
+    let filtered_structure;
+
+    async function start_search(term) {
+        const search_data = active == 'structure' ? structure : data;
+        const result = await new Promise((resolve) => {
             if (!term) {
-                resolve({ data, searching: false });
+                resolve({ data: search_data, searching: false });
                 return;
             }
-            clearTimeout(search_timer);
-            search_timer = setTimeout(() => {
-                resolve({ data: search(term.toLowerCase(), data), searching: true });
-            }, 500);
+            resolve({ data: search(term.toLowerCase(), search_data), searching: true });
         });
+        // handle result
+        searching = result.searching;
+        if (active == 'structure') {
+            filtered_structure = result.data;
+        } else {
+            filtered_data = result.data;
+        }
+        not_found = searching && !result.data;
     }
     function search(term, data) {
         if (Array.isArray(data)) {
@@ -61,6 +75,9 @@
                 return undefined;
             }
             return result;
+        }
+        if (data === null) {
+            return undefined;
         }
         const type = typeof data;
         if (type == 'object') {
@@ -121,7 +138,10 @@
                 title="close">⨯</button
             >
         </div>
-        <div class="content" style="--height: {height}px;">
+        <div class="content {state}" style="--height: {height}px;">
+            {#if state == 'busy'}
+                <div class="wyvr_loader" />
+            {/if}
             {#if not_found}
                 <em>nothing found for "<b>{term}</b>"</em>
             {:else if active == 'Data'}
@@ -136,7 +156,7 @@
         </div>
     </div>
 {:else}
-    <div class="loader" />
+    <div class="wyvr_loader" />
 {/if}
 
 <style>
@@ -200,11 +220,12 @@
         overflow: auto;
         height: var(--height);
         color: var(--wyvr-debug-text);
+        position: relative;
     }
-    .loader {
+    .wyvr_loader {
         text-align: center;
     }
-    .loader:after {
+    .wyvr_loader:after {
         display: inline-block;
         content: ' ';
         width: 24px;
@@ -215,6 +236,18 @@
         border-left-color: var(--wyvr-debug-primary);
         border-right-color: var(--wyvr-debug-primary);
         animation: spin 1.2s linear infinite;
+    }
+    .content .wyvr_loader {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 100;
     }
     @keyframes spin {
         0% {
