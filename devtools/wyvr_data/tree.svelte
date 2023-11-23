@@ -5,28 +5,33 @@
     export let searching = false;
     export let open = false;
 
-    $: tree = data
-        ? Object.keys(data)
-              .map((key) => {
-                  let type = typeof data[key];
-                  if (type == 'object' && Array.isArray(data[key])) {
-                      type = 'array';
-                  }
-                  return { key, value: data[key], type };
-              })
-              .sort((a, b) => {
-                  if (a.key < b.key) {
-                      return -1;
-                  }
-                  if (a.key > b.key) {
-                      return 1;
-                  }
-                  return 0;
-              })
-        : [];
+    $: tree = to_tree(data);
 
     $: update_open(searching);
 
+    function to_tree(data) {
+        if (!data) {
+            return [];
+        }
+        if (Array.isArray(data)) {
+            return data.map((item, index) => to_item(item, index.toString()));
+        }
+        return Object.keys(data)
+            .map((key) => to_item(data[key], key))
+            .sort((a, b) => {
+                if (a.key < b.key) {
+                    return -1;
+                }
+                if (a.key > b.key) {
+                    return 1;
+                }
+                return 0;
+            });
+    }
+    function to_item(value, key) {
+        const type = Array.isArray(value) ? 'array' : typeof value;
+        return { key, value, type };
+    }
     function get_path(path, segment) {
         if (!isNaN(segment)) {
             return path + '[' + segment + ']';
