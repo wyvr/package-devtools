@@ -7,7 +7,7 @@
     "devtools"
   ],
   "dependencies": {
-    "perfume.js": "^9.0.0-rc.3"
+    "perfume.js": "^9.2.0"
   },
   "description": "Package for [wyvr](https://wyvr.dev) which contains multiple devtools",
   "version": "0.0.0",

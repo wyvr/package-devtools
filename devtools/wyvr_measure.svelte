@@ -1,17 +1,28 @@
 <script>
+    import { initPerfume } from 'perfume.js';
     import { onDestroy, onMount } from 'svelte';
     import Tabs from './wyvr_devtools_helper/Tabs.svelte';
 
-    const coreMetrics = ["TTFB", "RT", "FCP", "LCP", "FID", "CLS", "TBT"];
+    const coreMetrics = ['TTFB', 'RT', 'FCP', 'LCP', 'FID', 'CLS', 'TBT'];
+    const coreMetricsName = {
+        TTFB: 'Time to First Byte',
+        RT: 'Response Time',
+        FCP: 'First Contentful Paint',
+        LCP: 'Largest Contentful Paint',
+        FID: 'First Input Delay',
+        CLS: 'Cumulative Layout Shift',
+        TBT: 'Total Blocking Time',
+    };
 
-    $: core = {};
-    $: coreKeys = Object.keys(core);
+    let core = {};
+    let coreKeys = [];
 
-    $: entries = [];
+    let entries = [];
     let height = 200;
+    let state = 'idle';
 
     onMount(() => {
-        new Perfume({
+        new initPerfume({
             firstPaint: true,
             firstContentfulPaint: true,
             firstInputDelay: true,
@@ -19,24 +30,26 @@
             navigationTiming: true,
             resourceTiming: true,
             storageEstimate: true,
+            maxMeasureTime: 10000,
             analyticsTracker: (options) => {
-                console.log(options);
                 // detect core metrics
                 if (coreMetrics.indexOf(options.metricName) > -1) {
                     console.log('CORE');
+                    console.log(options);
                     core[options.metricName] = options;
                     core = core;
+                    coreKeys = Object.keys(core);
                     return;
                 }
                 entries = entries.concat(options);
             },
         });
-        addEventListener("mousemove", mousemove);
-        addEventListener("mouseup", mouseup);
+        addEventListener('mousemove', mousemove);
+        addEventListener('mouseup', mouseup);
     });
     onDestroy(() => {
-        removeEventListener("mousemove", mousemove);
-        removeEventListener("mouseup", mouseup);
+        removeEventListener('mousemove', mousemove);
+        removeEventListener('mouseup', mouseup);
     });
 
     let moving = false;
@@ -47,6 +60,20 @@
         if (moving) {
             height = Math.max(height + e.movementY * -1, 0);
         }
+    }
+    function getRessourceFile(url) {
+        if (url.indexOf('http') > -1) {
+            const parts = url.split('/').reverse();
+            const index = parts.findIndex((item) => {
+                return item.indexOf('.') > -1 || item.indexOf('?') != 0;
+            });
+            return parts
+                .slice(0, index + 1)
+                .reverse()
+                .join('/')
+                .replace(/(\?.*)$/, '<span class="dim">$1</span>');
+        }
+        return url;
     }
 </script>
 
@@ -66,27 +93,49 @@
         on:close={() => trigger('wyvr_measure_close')}
     />
     <div class="content" style="--height: {height}px;">
-        {#each coreKeys as key}
-            {#if core[key]}
-                <h2>
-                    {core[key].metricName}{#if core[key].rating}<i
-                            style="margin-left:10px;">{core[key].rating}</i
-                        >{/if}
-                </h2>
-                <pre>{JSON.stringify(core[key], null, 4)}</pre>
-            {:else}
-                <h2>{key} loading</h2>
-            {/if}
-        {/each}
-        <hr />
-        {#each entries as entry}
-            <h2>
-                {entry.metricName}{#if entry.rating}<i style="margin-left:10px;"
-                        >{entry.rating}</i
-                    >{/if}
-            </h2>
-            <pre>{JSON.stringify(entry, null, 4)}</pre>
-        {/each}
+        {#if state == 'idle'}
+            &hellip;
+        {:else if state == 'core'}
+            <div class="core-grid">
+                {#each coreKeys as key}
+                    <div class="core {core[key]?.rating || ''}">
+                        {#if core[key]}
+                            <h2>
+                                {core[key].metricName}
+                            </h2>
+                            {#if coreMetricsName[core[key].metricName]}
+                                <span>{coreMetricsName[core[key].metricName]}</span>
+                            {/if}
+                            {#if core[key].rating}
+                                <b>{core[key].rating}</b>
+                            {/if}
+                        {/if}
+                    </div>
+                {/each}
+            </div>
+        {:else if state == 'resources'}
+            <ol>
+                {#each entries as entry}
+                    <li>
+                        {#if entry.metricName == 'navigationTiming'}
+                            <b>{entry.metricName}</b>
+                            {entry.data.totalTime}ms
+                        {:else if entry.metricName == 'resourceTiming'}
+                            <i class="icon {entry.data.initiatorType || 'unknown'}"></i>
+                            <a href={entry.data.name} target="_blank" title={entry.data.name}>{@html getRessourceFile(entry.data.name)}</a>
+                            <small>{entry.data.name}</small>
+                        {:else if entry.metricName == 'dataConsumption' || entry.metricName == 'storageEstimate' || entry.metricName == 'networkInformation'}
+                            <!-- ignore -->
+                        {:else}
+                            <details>
+                                <summary>unhandeled metric {entry.metricName}</summary>
+                                <pre>{JSON.stringify(entry, null, 4)}</pre>
+                            </details>
+                        {/if}
+                    </li>
+                {/each}
+            </ol>
+        {/if}
     </div>
 </div>
 
@@ -121,5 +170,94 @@
         padding: 10px;
         overflow: auto;
         height: var(--height);
+    }
+    .core-grid {
+        display: flex;
+        flex-direction: row;
+        gap: 1rem;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+        margin: 0 1rem;
+    }
+    .core {
+        display: flex;
+        flex-direction: column;
+        width: 200px;
+        position: relative;
+        color: var(--color);
+        padding-left: 1.5rem;
+    }
+
+    .core h2 {
+        font-size: 1.2rem;
+        margin: 0;
+        color: #fff;
+    }
+    .core.good {
+        --color: olivedrab;
+    }
+    .core.needs-improvement {
+        --color: coral;
+    }
+    .core.poor {
+        --color: crimson;
+    }
+    .core:before {
+        content: '';
+        display: block;
+        width: 1rem;
+        height: 1rem;
+        background: var(--color);
+        position: absolute;
+        top: 0.2rem;
+        left: 0;
+        border-radius: 50%;
+    }
+    .core span {
+        font-size: 0.7rem;
+        color: #fff;
+    }
+    ol {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 0.2rem;
+    }
+    ol a {
+        color: #fff;
+    }
+    .icon {
+        font-size: 1.1rem;
+        margin-right: 0.5rem;
+        font-style: normal;
+    }
+    .icon:before {
+        content: '?';
+    }
+    i.icon:global(.img:before) {
+        content: '🖼️';
+    }
+    i.icon:global(.script:before) {
+        content: '📜';
+    }
+    i.icon:global(.link:before) {
+        content: '🔗';
+    }
+    i.icon:global(.css:before) {
+        content: '🎨';
+    }
+    i.icon:global(.fetch:before) {
+        content: '⬇️';
+    }
+    i.icon:global(.other:before) {
+        content: '📦';
+    }
+
+    li small {
+        display: block;
+        font-size: 0.8rem;
+    }
+    li small,
+    li :global(.dim) {
+        opacity: 0.5;
     }
 </style>
