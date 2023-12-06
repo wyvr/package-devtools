@@ -1,11 +1,11 @@
 <script>
     import { onDestroy, onMount } from 'svelte';
     import Tree from './wyvr_data/tree.svelte';
+    import Tabs from './wyvr_devtools_helper/Tabs.svelte';
 
     let data;
     let structure;
-    const tabs = ['Data', 'Structure'];
-    let active = tabs[0];
+    let active;
     let term;
     let height = 400;
     let searching = false;
@@ -40,7 +40,6 @@
         clearTimeout(term_debouncer);
         term_debouncer = setTimeout(() => {
             search_term = term;
-            console.log(search_term);
             start_search(search_term).finally(() => {
                 state = 'idle';
             });
@@ -120,38 +119,26 @@
                 moving = true;
             }}
         />
-        <div class="tabs">
-            {#each tabs as tab}
-                <button
-                    on:click={() => {
-                        active = tab;
-                    }}
-                    class:active={active == tab}>{tab}</button
-                >
-            {/each}
-
-            <input bind:value={term} placeholder="Search" />
-            <button
-                on:click={() => {
-                    trigger('wyvr_data_close');
-                }}
-                title="close">⨯</button
-            >
-        </div>
+        <Tabs
+            tabs={[
+                { name: 'Data', value: 'data' },
+                { name: 'Structure', value: 'structure' },
+            ]}
+            search={true}
+            on:change={(e) => (active = e.detail)}
+            on:search={(e) => (term = e.detail)}
+            on:close={() => trigger('wyvr_data_close')}
+        />
         <div class="content {state}" style="--height: {height}px;">
             {#if state == 'busy'}
                 <div class="wyvr_loader" />
             {/if}
             {#if not_found}
                 <em>nothing found for "<b>{term}</b>"</em>
-            {:else if active == 'Data'}
-                <Tree data={filtered_data} open={true} path="data" highlight={term} {searching}
-                    ><span class="icon">🗃️</span> Data</Tree
-                >
-            {:else if active == 'Structure'}
-                <Tree data={filtered_structure} open={true} highlight={term} {searching}
-                    ><span class="icon">🏗️</span> Structure</Tree
-                >
+            {:else if active == 'data'}
+                <Tree data={filtered_data} open={true} path="data" highlight={term} {searching}><span class="icon">🗃️</span> Data</Tree>
+            {:else if active == 'structure'}
+                <Tree data={filtered_structure} open={true} highlight={term} {searching}><span class="icon">🏗️</span> Structure</Tree>
             {/if}
         </div>
     </div>
@@ -185,35 +172,6 @@
         flex-direction: column;
         height: 100%;
         color: var(--wyvr-debug-text);
-    }
-    .tabs {
-        border-bottom: 2px solid var(--line-color);
-        display: flex;
-        flex-direction: row;
-    }
-    .tabs button {
-        padding: 5px 20px;
-        background: transparent;
-        border: 0;
-        color: var(--wyvr-debug-primary);
-        font-size: var(--wyvr-debug-size);
-        cursor: pointer;
-    }
-    .tabs input {
-        border: 0;
-        border-left: 2px solid var(--line-color);
-        border-radius: 0;
-        background: transparent;
-        padding: 0 10px;
-        flex-grow: 1;
-        color: var(--wyvr-debug-text);
-    }
-    .tabs input:focus {
-        background: rgba(255, 255, 255, 0.1);
-    }
-    .tabs button.active {
-        color: var(--wyvr-debug-text);
-        border-bottom: 5px solid var(--wyvr-debug-text);
     }
     .content {
         padding: 10px;

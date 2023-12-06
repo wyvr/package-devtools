@@ -1,6 +1,6 @@
 <script>
-    import { Perfume } from "perfume.js";
-    import { onDestroy, onMount } from "svelte";
+    import { onDestroy, onMount } from 'svelte';
+    import Tabs from './wyvr_devtools_helper/Tabs.svelte';
 
     const coreMetrics = ["TTFB", "RT", "FCP", "LCP", "FID", "CLS", "TBT"];
 
@@ -56,6 +56,14 @@
         on:mousedown={() => {
             moving = true;
         }}
+    />
+    <Tabs
+        tabs={[
+            { name: 'Core', value: 'core' },
+            { name: 'Resources', value: 'resources' },
+        ]}
+        on:change={(e) => (state = e.detail)}
+        on:close={() => trigger('wyvr_measure_close')}
     />
     <div class="content" style="--height: {height}px;">
         {#each coreKeys as key}
