@@ -81,14 +81,17 @@
     }
     function get_text(text, highlight) {
         text = text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        if (highlight) {
+            text = text.replace(
+                new RegExp('(' + highlight + ')', 'gi'),
+                '<span class="highlight">$1</span>',
+            );
+        }
         if (text.match(/^".*"$/)) {
             return text;
         }
         text = `<code>${text}</code>`;
-        if (!highlight) {
-            return text;
-        }
-        return text.replace(new RegExp('(' + highlight + ')', 'gi'), '<span class="highlight">$1</span>');
+        return text;
     }
     function update_open(searching) {
         if (searching) {
@@ -106,7 +109,7 @@
     {#if open}
         {#each tree as node}
             {@const cur_path = get_path(path, node.key, node.type)}
-            <div class="node">
+            <div class="node" data-highlight={highlight}>
                 <button
                     class="key"
                     title={cur_path}
@@ -115,21 +118,36 @@
                     }}
                 >
                     {@html get_text(node.key, highlight)}
-                    <span class="icon">{get_type_icon(node.type, node.value)}</span>
+                    <span class="icon"
+                        >{get_type_icon(node.type, node.value)}</span
+                    >
                 </button>
                 <div class="value">
                     {#if node.type == 'string' || node.type == 'boolean' || node.type == 'number'}
                         <button on:click={copy_pre} class="btn">copy</button>
-                        <pre>{@html get_text(JSON.stringify(node.value, null, 4), highlight)}</pre>
+                        <pre>{@html get_text(
+                                JSON.stringify(node.value, null, 4),
+                                highlight,
+                            )}</pre>
                     {:else if node.type == 'array'}
-                        <svelte:self data={node.value} path={cur_path} {highlight} {searching} />
+                        <svelte:self
+                            data={node.value}
+                            path={cur_path}
+                            {highlight}
+                            {searching}
+                        />
                     {:else if node.type == 'object'}
                         {#if node.value == null}
                             <pre><code>null</code></pre>
                         {:else if Object.keys(node.value).length == 0}
                             <pre><code>empty</code></pre>
                         {:else}
-                            <svelte:self data={node.value} path={cur_path} {highlight} {searching} />
+                            <svelte:self
+                                data={node.value}
+                                path={cur_path}
+                                {highlight}
+                                {searching}
+                            />
                         {/if}
                     {:else if node.type == 'undefined'}
                         <pre><code>undefined</code></pre>
