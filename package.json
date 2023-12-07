@@ -1,26 +1,32 @@
 {
-  "name": "@wyvr/package-devtools",
-  "type": "module",
-  "keywords": [
-    "wyvr",
-    "package",
-    "devtools"
-  ],
-  "dependencies": {
-    "perfume.js": "^9.2.0"
-  },
-  "description": "Package for [wyvr](https://wyvr.dev) which contains multiple devtools",
-  "version": "0.0.0",
-  "main": "wyvr.js",
-  "devDependencies": {},
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/wyvr/package-devtools.git"
-  },
-  "author": "wyvr",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/wyvr/package-devtools/issues"
-  },
-  "homepage": "https://github.com/wyvr/package-devtools#readme"
+    "name": "@wyvr/package-devtools",
+    "type": "module",
+    "keywords": [
+        "wyvr",
+        "package",
+        "devtools"
+    ],
+    "dependencies": {
+        "perfume.js": "^9.2.0"
+    },
+    "description": "Package for [wyvr](https://wyvr.dev) which contains multiple devtools",
+    "version": "0.0.0",
+    "main": "wyvr.js",
+    "devDependencies": {},
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/wyvr/package-devtools.git"
+    },
+    "author": "wyvr",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/wyvr/package-devtools/issues"
+    },
+    "homepage": "https://github.com/wyvr/package-devtools#readme",
+    "prettier": {
+        "tabWidth": 4,
+        "singleQuote": true,
+        "useTabs": false,
+        "prettier.printWidth": 120
+    }
 }
