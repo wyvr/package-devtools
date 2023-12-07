@@ -123,6 +123,7 @@
             tabs={[
                 { name: 'Data', value: 'data' },
                 { name: 'Structure', value: 'structure' },
+                { name: 'Stack', value: 'stack' },
             ]}
             search={true}
             on:change={(e) => (active = e.detail)}
@@ -139,6 +140,8 @@
                 <Tree data={filtered_data} open={true} path="data" highlight={term} {searching}><span class="icon">🗃️</span> Data</Tree>
             {:else if active == 'structure'}
                 <Tree data={filtered_structure} open={true} highlight={term} {searching}><span class="icon">🏗️</span> Structure</Tree>
+            {:else if active == 'stack'}
+                <Tree data={window._stack} open={true} highlight={term} {searching}><span class="icon">🗇</span> Stack</Tree>
             {/if}
         </div>
     </div>
