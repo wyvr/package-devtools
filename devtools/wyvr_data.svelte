@@ -1,14 +1,12 @@
 <script>
     import { onDestroy, onMount } from 'svelte';
     import Tree from './wyvr_data/tree.svelte';
-    import Tabs from './wyvr_devtools_helper/Tabs.svelte';
-    import Drag from './wyvr_devtools_helper/Drag.svelte';
+    import BottomWindow from './wyvr_devtools_helper/BottomWindow.svelte';
 
     let data;
     let filtered;
     let view;
     let term;
-    let height = 400;
     let searching = false;
     let not_found = false;
     let search_term;
@@ -64,9 +62,11 @@
     });
 
     onDestroy(() => {
-        Object.keys(cache).forEach((key) => {
-            cache[key] = undefined;
-        });
+        if (cache) {
+            Object.keys(cache).forEach((key) => {
+                cache[key] = undefined;
+            });
+        }
     });
 
     let loaded = false;
@@ -77,6 +77,9 @@
     function init_view() {
         if (!loaded) {
             loaded = !!cache[KEY_DATA] && !!cache[KEY_STRUCTURE];
+            if (loaded) {
+                data = cache[view];
+            }
         }
         if (view == KEY_DATA && cache[KEY_DATA]) {
             state = 'idle';
@@ -173,77 +176,43 @@
     }
 </script>
 
-{#if loaded}
-    <div class="grid">
-        <Drag
-            {height}
-            on:change={(e) => {
-                height = e.detail;
-            }}
-        />
-        <Tabs
-            tabs={TABS}
-            search={true}
-            on:change={(e) => {
-                term = '';
-                if (
-                    [KEY_DATA, KEY_STRUCTURE, KEY_STACK, KEY_I18N].includes(
-                        e.detail,
-                    )
-                ) {
-                    view = e.detail;
-                    data = cache[e.detail];
-                }
-            }}
-            on:search={(e) => (term = e.detail)}
-            on:close={() => trigger('wyvr_data_close')}
-        />
-        <div class="content {state}" style="--height: {height}px;">
-            {#if state == 'busy'}
-                <div class="wyvr_loader" />
-            {/if}
-            {#if not_found}
-                <em>nothing found for "<b>{term}</b>"</em>
-            {:else}
-                <Tree
-                    data={filtered}
-                    open={true}
-                    path={view == KEY_DATA ? 'data' : ''}
-                    highlight={term}
-                    {searching}
-                >
-                    {@html ICONS[view]}
-                    {NAMES[view]}
-                </Tree>
-            {/if}
-        </div>
-    </div>
-{:else}
-    <div class="wyvr_loader" />
-{/if}
+<BottomWindow
+    tabs={TABS}
+    search={true}
+    height={400}
+    on:tab={(e) => {
+        term = '';
+        if ([KEY_DATA, KEY_STRUCTURE, KEY_STACK, KEY_I18N].includes(e.detail)) {
+            view = e.detail;
+            data = cache[e.detail];
+        }
+    }}
+    on:search={(e) => (term = e.detail)}
+    on:close={() => trigger('wyvr_data_close')}
+>
+    {#if loaded}
+        {#if state == 'busy'}
+            <div class="wyvr_loader" />
+        {:else if not_found}
+            <em>nothing found for "<b>{term}</b>"</em>
+        {:else}
+            <Tree
+                data={term ? filtered : data}
+                open={true}
+                path={view == KEY_DATA ? 'data' : ''}
+                highlight={term}
+                {searching}
+            >
+                {@html ICONS[view]}
+                {NAMES[view]}
+            </Tree>
+        {/if}
+    {:else}
+        <div class="wyvr_loader" />
+    {/if}
+</BottomWindow>
 
 <style>
-    :global(body > .wyvr_data) {
-        position: sticky;
-        bottom: 0;
-        z-index: 10000;
-        background: rgba(0, 0, 0, 0.9);
-        backdrop-filter: blur(3px);
-        overflow: auto;
-    }
-    .grid {
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-        color: var(--wyvr-debug-text);
-    }
-    .content {
-        padding: 10px;
-        overflow: auto;
-        height: var(--height);
-        color: var(--wyvr-debug-text);
-        position: relative;
-    }
     .wyvr_loader {
         text-align: center;
     }
@@ -258,18 +227,6 @@
         border-left-color: var(--wyvr-debug-primary);
         border-right-color: var(--wyvr-debug-primary);
         animation: spin 1.2s linear infinite;
-    }
-    .content .wyvr_loader {
-        position: absolute;
-        top: 0;
-        right: 0;
-        bottom: 0;
-        left: 0;
-        background: rgba(0, 0, 0, 0.5);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 100;
     }
     @keyframes spin {
         0% {
