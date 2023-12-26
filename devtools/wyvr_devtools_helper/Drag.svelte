@@ -24,9 +24,6 @@
     });
 
     onDestroy(() => {
-        Object.keys(cache).forEach((key) => {
-            cache[key] = undefined;
-        });
         removeEventListener('mousemove', mousemove);
         removeEventListener('mouseup', mouseup);
     });
