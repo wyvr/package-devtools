@@ -18,7 +18,6 @@
     let coreKeys = [];
 
     let entries = [];
-    let height = 200;
     let state = 'idle';
 
     onMount(() => {
@@ -67,7 +66,6 @@
         { name: 'Core', value: 'core' },
         { name: 'Resources', value: 'resources' },
     ]}
-    height={400}
     on:tab={(e) => (state = e.detail)}
     on:close={() => trigger('wyvr_measure_close')}
 >
