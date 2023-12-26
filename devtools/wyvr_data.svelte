@@ -4,68 +4,137 @@
     import Tabs from './wyvr_devtools_helper/Tabs.svelte';
 
     let data;
-    let structure;
-    let active;
+    let filtered;
+    let view;
     let term;
     let height = 400;
     let searching = false;
     let not_found = false;
     let search_term;
     let state = 'busy';
+
+    const cache = {},
+        KEY_DATA = 'data',
+        KEY_STRUCTURE = 'structure',
+        KEY_STACK = 'stack',
+        KEY_I18N = 'i18n',
+        ICONS = {
+            [KEY_DATA]: '<i class="ri-database-2-line"></i>',
+            [KEY_STRUCTURE]: '<i class="ri-node-tree"></i>',
+            [KEY_STACK]: '<i class="ri-stack-line"></i>',
+            [KEY_I18N]: '<i class="ri-translate"></i>',
+        },
+        NAMES = {
+            [KEY_DATA]: 'Data',
+            [KEY_STRUCTURE]: 'Structure',
+            [KEY_STACK]: 'Stack',
+            [KEY_I18N]: 'I18N',
+        },
+        TABS = [
+            { name: NAMES[KEY_DATA], value: KEY_DATA, icon: ICONS[KEY_DATA] },
+            {
+                name: NAMES[KEY_STRUCTURE],
+                value: KEY_STRUCTURE,
+                icon: ICONS[KEY_STRUCTURE],
+            },
+            {
+                name: NAMES[KEY_STACK],
+                value: KEY_STACK,
+                icon: ICONS[KEY_STACK],
+            },
+            { name: NAMES[KEY_I18N], value: KEY_I18N, icon: ICONS[KEY_I18N] },
+        ];
+
     $: get_term(term);
 
     onMount(() => {
+        // load data from wyvr
         wyvr_devtools_inspect_data().then((result) => {
-            data = result;
-            state = 'idle';
+            cache[KEY_DATA] = result;
+            init_view();
         });
         wyvr_devtools_inspect_structure_data().then((result) => {
-            structure = result;
-            state = 'idle';
+            cache[KEY_STRUCTURE] = result;
+            init_view();
         });
+
+        cache[KEY_STACK] = window._stack;
+        cache[KEY_I18N] = window._i18n?.data;
 
         addEventListener('mousemove', mousemove);
         addEventListener('mouseup', mouseup);
     });
     onDestroy(() => {
+        Object.keys(cache).forEach((key) => {
+            cache[key] = undefined;
+        });
         removeEventListener('mousemove', mousemove);
         removeEventListener('mouseup', mouseup);
     });
 
-    $: loaded = data && structure;
+    let loaded = false;
 
     let term_debouncer;
+    let start = false;
+
+    function init_view() {
+        if (!loaded) {
+            loaded = !!cache[KEY_DATA] && !!cache[KEY_STRUCTURE];
+        }
+        if (view == KEY_DATA && cache[KEY_DATA]) {
+            state = 'idle';
+        }
+        if (view == KEY_STRUCTURE && cache[KEY_STRUCTURE]) {
+            state = 'idle';
+        }
+    }
     function get_term(term) {
+        if (start) {
+            return;
+        }
         state = 'busy';
         clearTimeout(term_debouncer);
         term_debouncer = setTimeout(() => {
             search_term = term;
-            start_search(search_term).finally(() => {
+            if (!data) {
                 state = 'idle';
+                start = false;
+                return;
+            }
+            start = true;
+            start_search(search_term, data).finally(() => {
+                state = 'idle';
+                start = false;
             });
         }, 500);
     }
 
-    let filtered_data;
-    let filtered_structure;
 
-    async function start_search(term) {
-        const search_data = active == 'structure' ? structure : data;
+    async function start_search(term, search_data) {
         const result = await new Promise((resolve) => {
             if (!term) {
                 resolve({ data: search_data, searching: false });
                 return;
             }
-            resolve({ data: search(term.toLowerCase(), search_data), searching: true });
+            resolve({
+                data: search(term.toLowerCase(), search_data),
+                searching: true,
+            });
         });
         // handle result
         searching = result.searching;
-        if (active == 'structure') {
-            filtered_structure = result.data;
-        } else {
-            filtered_data = result.data;
-        }
         not_found = searching && !result.data;
+        filtered = result.data;
+    }
+    function is_primitive(data) {
+        const type = typeof data;
+        return type == 'string' || type == 'number' || type == 'boolean';
+    }
+    function search_primitive(term, data) {
+        if (!is_primitive(data)) {
+            return false;
+        }
+        return (data + '').toLowerCase().indexOf(term) > -1;
     }
     function search(term, data) {
         if (Array.isArray(data)) {
@@ -79,25 +148,29 @@
             return undefined;
         }
         const type = typeof data;
-        if (type == 'object') {
-            const result = {};
-            let set = false;
+
+        // search in objects
+        if (type != 'object') {
+            return undefined;
+        }
+        const result = {};
+        let set = false;
+        Object.keys(data).forEach((key) => {
             Object.keys(data).forEach((key) => {
-                if (key.toLowerCase().indexOf(term) > -1 || search(term, data[key])) {
+                if (
+                    key.toLowerCase().indexOf(term) > -1 ||
+                    search_primitive(term, data[key]) ||
+                    search(term, data[key])
+                ) {
                     set = true;
                     result[key] = data[key];
-                    return;
                 }
             });
-            if (!set) {
-                return undefined;
-            }
-            return result;
+        });
+        if (!set) {
+            return undefined;
         }
-        if (type == 'string' || type == 'number' || type == 'boolean') {
-            return (data + '').toLowerCase().indexOf(term) > -1 ? data : undefined;
-        }
-        return undefined;
+        return result;
     }
 
     let moving = false;
@@ -120,13 +193,19 @@
             }}
         />
         <Tabs
-            tabs={[
-                { name: 'Data', value: 'data' },
-                { name: 'Structure', value: 'structure' },
-                { name: 'Stack', value: 'stack' },
-            ]}
+            tabs={TABS}
             search={true}
-            on:change={(e) => (active = e.detail)}
+            on:change={(e) => {
+                term = '';
+                if (
+                    [KEY_DATA, KEY_STRUCTURE, KEY_STACK, KEY_I18N].includes(
+                        e.detail,
+                    )
+                ) {
+                    view = e.detail;
+                    data = cache[e.detail];
+                }
+            }}
             on:search={(e) => (term = e.detail)}
             on:close={() => trigger('wyvr_data_close')}
         />
@@ -136,12 +215,17 @@
             {/if}
             {#if not_found}
                 <em>nothing found for "<b>{term}</b>"</em>
-            {:else if active == 'data'}
-                <Tree data={filtered_data} open={true} path="data" highlight={term} {searching}><span class="icon">🗃️</span> Data</Tree>
-            {:else if active == 'structure'}
-                <Tree data={filtered_structure} open={true} highlight={term} {searching}><span class="icon">🏗️</span> Structure</Tree>
-            {:else if active == 'stack'}
-                <Tree data={window._stack} open={true} highlight={term} {searching}><span class="icon">🗇</span> Stack</Tree>
+            {:else}
+                <Tree
+                    data={filtered}
+                    open={true}
+                    path={view == KEY_DATA ? 'data' : ''}
+                    highlight={term}
+                    {searching}
+                >
+                    {@html ICONS[view]}
+                    {NAMES[view]}
+                </Tree>
             {/if}
         </div>
     </div>
