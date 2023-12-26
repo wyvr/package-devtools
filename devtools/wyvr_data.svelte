@@ -2,6 +2,7 @@
     import { onDestroy, onMount } from 'svelte';
     import Tree from './wyvr_data/tree.svelte';
     import Tabs from './wyvr_devtools_helper/Tabs.svelte';
+    import Drag from './wyvr_devtools_helper/Drag.svelte';
 
     let data;
     let filtered;
@@ -60,16 +61,12 @@
 
         cache[KEY_STACK] = window._stack;
         cache[KEY_I18N] = window._i18n?.data;
-
-        addEventListener('mousemove', mousemove);
-        addEventListener('mouseup', mouseup);
     });
+
     onDestroy(() => {
         Object.keys(cache).forEach((key) => {
             cache[key] = undefined;
         });
-        removeEventListener('mousemove', mousemove);
-        removeEventListener('mouseup', mouseup);
     });
 
     let loaded = false;
@@ -109,7 +106,6 @@
         }, 500);
     }
 
-
     async function start_search(term, search_data) {
         const result = await new Promise((resolve) => {
             if (!term) {
@@ -126,16 +122,19 @@
         not_found = searching && !result.data;
         filtered = result.data;
     }
+
     function is_primitive(data) {
         const type = typeof data;
         return type == 'string' || type == 'number' || type == 'boolean';
     }
+
     function search_primitive(term, data) {
         if (!is_primitive(data)) {
             return false;
         }
         return (data + '').toLowerCase().indexOf(term) > -1;
     }
+
     function search(term, data) {
         if (Array.isArray(data)) {
             const result = data.filter((item) => search(term, item));
@@ -172,24 +171,14 @@
         }
         return result;
     }
-
-    let moving = false;
-    function mouseup(e) {
-        moving = false;
-    }
-    function mousemove(e) {
-        if (moving) {
-            height = Math.max(height + e.movementY * -1, 0);
-        }
-    }
 </script>
 
 {#if loaded}
     <div class="grid">
-        <div
-            class="drag"
-            on:mousedown={() => {
-                moving = true;
+        <Drag
+            {height}
+            on:change={(e) => {
+                height = e.detail;
             }}
         />
         <Tabs
@@ -241,18 +230,6 @@
         background: rgba(0, 0, 0, 0.9);
         backdrop-filter: blur(3px);
         overflow: auto;
-        --line-color: rgba(255, 255, 255, 0.3);
-    }
-    .drag {
-        cursor: ns-resize;
-        height: 2px;
-        background: var(--line-color);
-    }
-    .drag:hover {
-        height: 5px;
-    }
-    .drag:active {
-        --line-color: var(--wyvr-debug-primary);
     }
     .grid {
         display: flex;

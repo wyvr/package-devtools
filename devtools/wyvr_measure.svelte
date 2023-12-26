@@ -1,7 +1,8 @@
 <script>
     import { initPerfume } from 'perfume.js';
-    import { onDestroy, onMount } from 'svelte';
+    import { onMount } from 'svelte';
     import Tabs from './wyvr_devtools_helper/Tabs.svelte';
+    import Drag from './wyvr_devtools_helper/Drag.svelte';
 
     const coreMetrics = ['TTFB', 'RT', 'FCP', 'LCP', 'FID', 'CLS', 'TBT'];
     const coreMetricsName = {
@@ -44,23 +45,8 @@
                 entries = entries.concat(options);
             },
         });
-        addEventListener('mousemove', mousemove);
-        addEventListener('mouseup', mouseup);
-    });
-    onDestroy(() => {
-        removeEventListener('mousemove', mousemove);
-        removeEventListener('mouseup', mouseup);
     });
 
-    let moving = false;
-    function mouseup(e) {
-        moving = false;
-    }
-    function mousemove(e) {
-        if (moving) {
-            height = Math.max(height + e.movementY * -1, 0);
-        }
-    }
     function getRessourceFile(url) {
         if (url.indexOf('http') > -1) {
             const parts = url.split('/').reverse();
@@ -78,10 +64,10 @@
 </script>
 
 <div class="grid">
-    <div
-        class="drag"
-        on:mousedown={() => {
-            moving = true;
+    <Drag
+        {height}
+        on:change={(e) => {
+            height = e.detail;
         }}
     />
     <Tabs
@@ -104,7 +90,11 @@
                                 {core[key].metricName}
                             </h2>
                             {#if coreMetricsName[core[key].metricName]}
-                                <span>{coreMetricsName[core[key].metricName]}</span>
+                                <span
+                                    >{coreMetricsName[
+                                        core[key].metricName
+                                    ]}</span
+                                >
                             {/if}
                             {#if core[key].rating}
                                 <b>{core[key].rating}</b>
@@ -121,14 +111,24 @@
                             <b>{entry.metricName}</b>
                             {entry.data.totalTime}ms
                         {:else if entry.metricName == 'resourceTiming'}
-                            <i class="icon {entry.data.initiatorType || 'unknown'}"></i>
-                            <a href={entry.data.name} target="_blank" title={entry.data.name}>{@html getRessourceFile(entry.data.name)}</a>
+                            <i
+                                class="icon {entry.data.initiatorType ||
+                                    'unknown'}"
+                            ></i>
+                            <a
+                                href={entry.data.name}
+                                target="_blank"
+                                title={entry.data.name}
+                                >{@html getRessourceFile(entry.data.name)}</a
+                            >
                             <small>{entry.data.name}</small>
                         {:else if entry.metricName == 'dataConsumption' || entry.metricName == 'storageEstimate' || entry.metricName == 'networkInformation'}
                             <!-- ignore -->
                         {:else}
                             <details>
-                                <summary>unhandeled metric {entry.metricName}</summary>
+                                <summary
+                                    >unhandeled metric {entry.metricName}</summary
+                                >
                                 <pre>{JSON.stringify(entry, null, 4)}</pre>
                             </details>
                         {/if}
@@ -149,18 +149,6 @@
         backdrop-filter: blur(3px);
         overflow: auto;
         --line-color: rgba(255, 255, 255, 0.3);
-    }
-
-    .drag {
-        cursor: ns-resize;
-        height: 2px;
-        background: var(--line-color);
-    }
-    .drag:hover {
-        height: 5px;
-    }
-    .drag:active {
-        --line-color: var(--wyvr-debug-primary);
     }
     .grid {
         display: flex;
