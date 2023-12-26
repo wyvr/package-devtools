@@ -27,12 +27,17 @@
             on:click={() => {
                 index = idx;
             }}
-            class:active={active == tab.value}>{tab.name}</button
+            class:active={active == tab.value}
+            >{#if tab.icon}{@html tab.icon}&nbsp;{/if}{tab.name}</button
         >
     {/each}
     <div class="fill">
         {#if search}
-            <input bind:value={term} on:input={() => dispatcher('search', term)} placeholder="Search" />
+            <input
+                bind:value={term}
+                on:input={() => dispatcher('search', term)}
+                placeholder="Search"
+            />
         {/if}
     </div>
     {#if close}
