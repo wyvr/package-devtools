@@ -1,8 +1,7 @@
 <script>
     import { initPerfume } from 'perfume.js';
     import { onMount } from 'svelte';
-    import Tabs from './wyvr_devtools_helper/Tabs.svelte';
-    import Drag from './wyvr_devtools_helper/Drag.svelte';
+    import BottomWindow from './wyvr_devtools_helper/BottomWindow.svelte';
 
     const coreMetrics = ['TTFB', 'RT', 'FCP', 'LCP', 'FID', 'CLS', 'TBT'];
     const coreMetricsName = {
@@ -63,102 +62,69 @@
     }
 </script>
 
-<div class="grid">
-    <Drag
-        {height}
-        on:change={(e) => {
-            height = e.detail;
-        }}
-    />
-    <Tabs
-        tabs={[
-            { name: 'Core', value: 'core' },
-            { name: 'Resources', value: 'resources' },
-        ]}
-        on:change={(e) => (state = e.detail)}
-        on:close={() => trigger('wyvr_measure_close')}
-    />
-    <div class="content" style="--height: {height}px;">
-        {#if state == 'idle'}
-            &hellip;
-        {:else if state == 'core'}
-            <div class="core-grid">
-                {#each coreKeys as key}
-                    <div class="core {core[key]?.rating || ''}">
-                        {#if core[key]}
-                            <h2>
-                                {core[key].metricName}
-                            </h2>
-                            {#if coreMetricsName[core[key].metricName]}
-                                <span
-                                    >{coreMetricsName[
-                                        core[key].metricName
-                                    ]}</span
-                                >
-                            {/if}
-                            {#if core[key].rating}
-                                <b>{core[key].rating}</b>
-                            {/if}
+<BottomWindow
+    tabs={[
+        { name: 'Core', value: 'core' },
+        { name: 'Resources', value: 'resources' },
+    ]}
+    height={400}
+    on:tab={(e) => (state = e.detail)}
+    on:close={() => trigger('wyvr_measure_close')}
+>
+    {#if state == 'idle'}
+        &hellip;
+    {:else if state == 'core'}
+        <div class="core-grid">
+            {#each coreKeys as key}
+                <div class="core {core[key]?.rating || ''}">
+                    {#if core[key]}
+                        <h2>
+                            {core[key].metricName}
+                        </h2>
+                        {#if coreMetricsName[core[key].metricName]}
+                            <span>{coreMetricsName[core[key].metricName]}</span>
                         {/if}
-                    </div>
-                {/each}
-            </div>
-        {:else if state == 'resources'}
-            <ol>
-                {#each entries as entry}
-                    <li>
-                        {#if entry.metricName == 'navigationTiming'}
-                            <b>{entry.metricName}</b>
-                            {entry.data.totalTime}ms
-                        {:else if entry.metricName == 'resourceTiming'}
-                            <i
-                                class="icon {entry.data.initiatorType ||
-                                    'unknown'}"
-                            ></i>
-                            <a
-                                href={entry.data.name}
-                                target="_blank"
-                                title={entry.data.name}
-                                >{@html getRessourceFile(entry.data.name)}</a
+                        {#if core[key].rating}
+                            <b>{core[key].rating}</b>
+                        {/if}
+                    {/if}
+                </div>
+            {/each}
+        </div>
+    {:else if state == 'resources'}
+        <ol>
+            {#each entries as entry}
+                <li>
+                    {#if entry.metricName == 'navigationTiming'}
+                        <b>{entry.metricName}</b>
+                        {entry.data.totalTime}ms
+                    {:else if entry.metricName == 'resourceTiming'}
+                        <i class="icon {entry.data.initiatorType || 'unknown'}"
+                        ></i>
+                        <a
+                            href={entry.data.name}
+                            target="_blank"
+                            title={entry.data.name}
+                            >{@html getRessourceFile(entry.data.name)}</a
+                        >
+                        <small>{entry.data.name}</small>
+                    {:else if entry.metricName == 'dataConsumption' || entry.metricName == 'storageEstimate' || entry.metricName == 'networkInformation'}
+                        <!-- ignore -->
+                    {:else}
+                        <details>
+                            <summary
+                                >unhandeled metric {entry.metricName}</summary
                             >
-                            <small>{entry.data.name}</small>
-                        {:else if entry.metricName == 'dataConsumption' || entry.metricName == 'storageEstimate' || entry.metricName == 'networkInformation'}
-                            <!-- ignore -->
-                        {:else}
-                            <details>
-                                <summary
-                                    >unhandeled metric {entry.metricName}</summary
-                                >
-                                <pre>{JSON.stringify(entry, null, 4)}</pre>
-                            </details>
-                        {/if}
-                    </li>
-                {/each}
-            </ol>
-        {/if}
-    </div>
-</div>
+                            <pre>{JSON.stringify(entry, null, 4)}</pre>
+                        </details>
+                    {/if}
+                </li>
+            {/each}
+        </ol>
+    {/if}
+</BottomWindow>
 
 <style>
-    :global(.wyvr_measure) {
-        position: sticky;
-        bottom: 0;
-        z-index: 10000;
-        background: rgba(0, 0, 0, 0.9);
-        color: #fff;
-        backdrop-filter: blur(3px);
-        overflow: auto;
-        --line-color: rgba(255, 255, 255, 0.3);
-    }
-    .grid {
-        display: flex;
-        flex-direction: column;
-    }
-    .content {
-        padding: 10px;
-        overflow: auto;
-        height: var(--height);
-    }
     .core-grid {
         display: flex;
         flex-direction: row;
