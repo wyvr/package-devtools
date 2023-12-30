@@ -161,6 +161,9 @@
 </div>
 
 <style>
+    :root {
+        --line-color: rgba(255, 255, 255, 0.3);
+    }
     .tree {
         width: fit-content;
     }
