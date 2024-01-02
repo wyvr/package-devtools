@@ -54,7 +54,7 @@
         margin-top: 10px;
         top: calc(1.5em * var(--breakpoint-index));
         font-size: 1em;
-        border-radius: calc(var(--size) * 0.125);
+        border-radius: 0.125rem;
         line-height: 1em;
         color: #000;
         font-weight: 700;
