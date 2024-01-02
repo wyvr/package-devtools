@@ -51,6 +51,8 @@
         border-bottom: 2px solid var(--line-color);
         display: flex;
         flex-direction: row;
+        min-height: 2.5rem;
+        font-size: 1rem;
     }
     button {
         padding: 5px 20px;
@@ -62,7 +64,7 @@
     }
     button.active {
         color: var(--wyvr-debug-text);
-        border-bottom: 5px solid var(--wyvr-debug-text);
+        background-color: var(--wyvr-debug-primary);
     }
     button:focus,
     input:focus {
