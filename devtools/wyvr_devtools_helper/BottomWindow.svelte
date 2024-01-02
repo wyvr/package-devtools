@@ -11,19 +11,18 @@
     let el;
 
     onMount(() => {
-        update_height()
+        update_height(el);
     });
     onDestroy(() => {
-        update_height()
+        update_height();
     });
-    
-    function update_height() {
-        if(el) {
+
+    function update_height(el) {
+        if (el) {
             document.body.style.paddingBottom = `${el.offsetHeight}px`;
         } else {
-            document.body.style.paddingBottom = undefined;
+            document.body.style.paddingBottom = '';
         }
-        
     }
 </script>
 
