@@ -103,5 +103,7 @@
         cursor: pointer;
         padding: 0;
         line-height: 1rem;
+        text-transform: none;
+        font-weight: normal;
     }
 </style>
