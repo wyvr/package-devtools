@@ -255,6 +255,8 @@
         text-align: center;
         min-width: 24px;
         line-height: 1rem;
+        text-transform: none;
+        font-weight: normal;
     }
     .value {
         position: relative;
