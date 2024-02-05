@@ -6,40 +6,31 @@
 
 {#if component && data}
     <div class="block">
-        <Tree data={{ name: data.name, path: data.path }} open={true}
-            ><div class="headline">
-                <span class="icon">🔍</span><span class="text">Component</span>
-            </div></Tree
-        >
+        <Tree data={{ name: data.name, path: data.path }} open={true}>
+            <i class="ri-information-line"></i> Component
+        </Tree>
     </div>
     <div class="block">
         {#if data.pkg}
-            <Tree data={data.pkg} open={true}
-                ><div class="headline">
-                    <span class="icon">📦</span><span class="text">Package</span
-                    >
-                </div></Tree
-            >
+            <Tree data={data.pkg} open={true}>
+                <i class="ri-folders-line"></i> Package
+            </Tree>
         {:else}
             <em>no package found</em>
         {/if}
     </div>
     {#if data.props}
         <div class="block">
-            <Tree data={data.props} open={true}
-                ><div class="headline">
-                    <span class="icon">🔧</span><span class="text">Props</span>
-                </div></Tree
-            >
+            <Tree data={data.props} open={true}>
+                <i class="ri-list-check"></i> Props
+            </Tree>
         </div>
     {/if}
     {#if data.config}
         <div class="block">
-            <Tree data={data.config} open={true}
-                ><div class="headline">
-                    <span class="icon">⚙</span><span class="text">Config</span>
-                </div></Tree
-            >
+            <Tree data={data.config} open={true}>
+                <i class="ri-settings-3-line"></i> Config
+            </Tree>
         </div>
     {/if}
 {/if}
@@ -51,12 +42,6 @@
         --line-color: rgba(255, 255, 255, 0.3);
     }
 
-    .headline {
-        font-weight: 700;
-    }
-    .headline .icon {
-        padding-right: 10px;
-    }
     .block {
         border-top: 1px solid rgba(255, 255, 255, 0.3);
         padding: 20px;
