@@ -101,6 +101,7 @@
         display: flex;
         flex-direction: row-reverse;
         border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+        min-height: auto;
     }
     .topbar button {
         padding: 5px 20px;
@@ -109,6 +110,7 @@
         border-left: 2px solid var(--line-color);
         color: var(--wyvr-debug-primary);
         font-size: var(--wyvr-debug-size);
+        line-height: 1em;
         cursor: pointer;
     }
     .inner {
