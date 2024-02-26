@@ -3,6 +3,7 @@
     import { get_parent_node, search } from './wyvr_inspect/helper.js';
     import Dialog from './wyvr_devtools_helper/Dialog.svelte';
     import Data from './wyvr_inspect/Data.svelte';
+    import { wyvr_props } from '@wyvr/generator/src/resource/props.js';
 
     let hydrate_components = [];
     let active_component;
