@@ -15,28 +15,20 @@
 
     const cache = {},
         KEY_DATA = 'data',
-        KEY_STRUCTURE = 'structure',
         KEY_STACK = 'stack',
         KEY_I18N = 'i18n',
         ICONS = {
             [KEY_DATA]: '<i class="ri-database-2-line"></i>',
-            [KEY_STRUCTURE]: '<i class="ri-node-tree"></i>',
             [KEY_STACK]: '<i class="ri-stack-line"></i>',
             [KEY_I18N]: '<i class="ri-translate"></i>',
         },
         NAMES = {
             [KEY_DATA]: 'Data',
-            [KEY_STRUCTURE]: 'Structure',
             [KEY_STACK]: 'Stack',
             [KEY_I18N]: 'I18N',
         },
         TABS = [
             { name: NAMES[KEY_DATA], value: KEY_DATA, icon: ICONS[KEY_DATA] },
-            {
-                name: NAMES[KEY_STRUCTURE],
-                value: KEY_STRUCTURE,
-                icon: ICONS[KEY_STRUCTURE],
-            },
             {
                 name: NAMES[KEY_STACK],
                 value: KEY_STACK,
@@ -51,10 +43,6 @@
         // load data from wyvr
         wyvr_devtools_inspect_data().then((result) => {
             cache[KEY_DATA] = result;
-            init_view();
-        });
-        wyvr_devtools_inspect_structure_data().then((result) => {
-            cache[KEY_STRUCTURE] = result;
             init_view();
         });
 
@@ -77,15 +65,12 @@
 
     function init_view() {
         if (!loaded) {
-            loaded = !!cache[KEY_DATA] && !!cache[KEY_STRUCTURE];
+            loaded = !!cache[KEY_DATA];
             if (loaded) {
                 data = cache[view];
             }
         }
         if (view == KEY_DATA && cache[KEY_DATA]) {
-            state = 'idle';
-        }
-        if (view == KEY_STRUCTURE && cache[KEY_STRUCTURE]) {
             state = 'idle';
         }
     }
@@ -183,7 +168,7 @@
     height={400}
     on:tab={(e) => {
         term = '';
-        if ([KEY_DATA, KEY_STRUCTURE, KEY_STACK, KEY_I18N].includes(e.detail)) {
+        if ([KEY_DATA, KEY_STACK, KEY_I18N].includes(e.detail)) {
             view = e.detail;
             data = cache[e.detail];
         }
@@ -191,24 +176,20 @@
     on:search={(e) => (term = e.detail)}
     on:close={() => trigger('wyvr_data_close')}
 >
-    {#if loaded}
-        {#if state == 'busy'}
-            <Loader></Loader>
-        {:else if not_found}
-            <em>nothing found for "<b>{term}</b>"</em>
-        {:else}
-            <Tree
-                data={term ? filtered : data}
-                open={true}
-                path={view == KEY_DATA ? 'data' : ''}
-                highlight={term}
-                {searching}
-            >
-                {@html ICONS[view]}
-                {NAMES[view]}
-            </Tree>
-        {/if}
-    {:else}
+    {#if state == 'busy'}
         <Loader></Loader>
+    {:else if not_found}
+        <em>nothing found for "<b>{term}</b>"</em>
+    {:else}
+        <Tree
+            data={term ? filtered : data}
+            open={true}
+            path={view == KEY_DATA ? 'data' : ''}
+            highlight={term}
+            {searching}
+        >
+            {@html ICONS[view]}
+            {NAMES[view]}
+        </Tree>
     {/if}
 </BottomWindow>
