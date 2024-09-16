@@ -31,6 +31,7 @@
 
 <div
     class="drag"
+    aria-hidden="true"
     on:mousedown={() => {
         moving = true;
     }}

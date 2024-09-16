@@ -58,6 +58,7 @@
 >
     <div
         class="drag topbar"
+        aria-hidden="true"
         on:mousedown={() => {
             moving = true;
         }}
