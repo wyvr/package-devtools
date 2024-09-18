@@ -1,24 +1,24 @@
 <script>
-    import { createEventDispatcher, onMount } from 'svelte';
-    const dispatcher = createEventDispatcher();
+import { createEventDispatcher, onMount } from 'svelte';
+const dispatcher = createEventDispatcher();
 
-    export let tabs = [];
-    export let search = false;
-    export let close = true;
+export let tabs = [];
+export let search = false;
+export let close = true;
 
-    let index = 0;
-    $: active = tabs[index]?.value;
-    $: update(active);
+let index = 0;
+$: active = tabs[index]?.value;
+$: update(active);
 
-    $: internal_tabs = tabs.filter((tab) => tab && tab.value && tab.name);
-    let term = '';
+$: internal_tabs = tabs.filter((tab) => tab?.value && tab.name);
+let term = '';
 
-    function update(active) {
-        dispatcher('change', active);
-    }
-    onMount(() => {
-        update(active);
-    });
+function update(active) {
+    dispatcher('change', active);
+}
+onMount(() => {
+    update(active);
+});
 </script>
 
 <div class="tabs">
@@ -61,6 +61,8 @@
         color: var(--wyvr-debug-primary);
         font-size: var(--wyvr-debug-size);
         cursor: pointer;
+        height: auto;
+        border-radius: 0;
     }
     button.active {
         color: var(--wyvr-debug-text);
