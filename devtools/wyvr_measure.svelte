@@ -1,64 +1,64 @@
 <script>
-    import { initPerfume } from 'perfume.js';
-    import { onMount } from 'svelte';
-    import BottomWindow from './wyvr_devtools_helper/BottomWindow.svelte';
+import { initPerfume } from 'perfume.js';
+import { onMount } from 'svelte';
+import BottomWindow from './wyvr_devtools_helper/BottomWindow.svelte';
 
-    const coreMetrics = ['TTFB', 'RT', 'FCP', 'LCP', 'FID', 'CLS', 'TBT'];
-    const coreMetricsName = {
-        TTFB: 'Time to First Byte',
-        RT: 'Response Time',
-        FCP: 'First Contentful Paint',
-        LCP: 'Largest Contentful Paint',
-        FID: 'First Input Delay',
-        CLS: 'Cumulative Layout Shift',
-        TBT: 'Total Blocking Time',
-    };
+const coreMetrics = ['TTFB', 'RT', 'FCP', 'LCP', 'FID', 'CLS', 'TBT'];
+const coreMetricsName = {
+    TTFB: 'Time to First Byte',
+    RT: 'Response Time',
+    FCP: 'First Contentful Paint',
+    LCP: 'Largest Contentful Paint',
+    FID: 'First Input Delay',
+    CLS: 'Cumulative Layout Shift',
+    TBT: 'Total Blocking Time'
+};
 
-    let core = {};
-    let coreKeys = [];
+let core = {};
+let coreKeys = [];
 
-    let entries = [];
-    let state = 'idle';
+let entries = [];
+let state = 'idle';
 
-    onMount(() => {
-        new initPerfume({
-            firstPaint: true,
-            firstContentfulPaint: true,
-            firstInputDelay: true,
-            dataConsumption: true,
-            navigationTiming: true,
-            resourceTiming: true,
-            storageEstimate: true,
-            maxMeasureTime: 10000,
-            analyticsTracker: (options) => {
-                // detect core metrics
-                if (coreMetrics.indexOf(options.metricName) > -1) {
-                    console.log('CORE');
-                    console.log(options);
-                    core[options.metricName] = options;
-                    core = core;
-                    coreKeys = Object.keys(core);
-                    return;
-                }
-                entries = entries.concat(options);
-            },
-        });
-    });
-
-    function getRessourceFile(url) {
-        if (url.indexOf('http') > -1) {
-            const parts = url.split('/').reverse();
-            const index = parts.findIndex((item) => {
-                return item.indexOf('.') > -1 || item.indexOf('?') != 0;
-            });
-            return parts
-                .slice(0, index + 1)
-                .reverse()
-                .join('/')
-                .replace(/(\?.*)$/, '<span class="dim">$1</span>');
+onMount(() => {
+    new initPerfume({
+        firstPaint: true,
+        firstContentfulPaint: true,
+        firstInputDelay: true,
+        dataConsumption: true,
+        navigationTiming: true,
+        resourceTiming: true,
+        storageEstimate: true,
+        maxMeasureTime: 10000,
+        analyticsTracker: (options) => {
+            // detect core metrics
+            if (coreMetrics.indexOf(options.metricName) > -1) {
+                console.log('CORE');
+                console.log(options);
+                core[options.metricName] = options;
+                core = core;
+                coreKeys = Object.keys(core);
+                return;
+            }
+            entries = entries.concat(options);
         }
-        return url;
+    });
+});
+
+function getRessourceFile(url) {
+    if (url.indexOf('http') > -1) {
+        const parts = url.split('/').reverse();
+        const index = parts.findIndex((item) => {
+            return item.indexOf('.') > -1 || item.indexOf('?') != 0;
+        });
+        return parts
+            .slice(0, index + 1)
+            .reverse()
+            .join('/')
+            .replace(/(\?.*)$/, '<span class="dim">$1</span>');
     }
+    return url;
+}
 </script>
 
 <BottomWindow

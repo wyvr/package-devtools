@@ -1,7 +1,7 @@
 <script>
-    import Tree from './../wyvr_devtools_helper/Tree.svelte';
-    export let data = undefined;
-    export let component = undefined;
+import Tree from './../wyvr_devtools_helper/Tree.svelte';
+export let data = undefined;
+export let component = undefined;
 </script>
 
 {#if component && data}

@@ -1,32 +1,32 @@
 <script>
-    import { createEventDispatcher, onMount, onDestroy } from 'svelte';
+import { createEventDispatcher, onMount, onDestroy } from 'svelte';
 
-    export let height;
+export let height;
 
-    let moving = false;
+let moving = false;
 
-    const dispatcher = createEventDispatcher();
+const dispatcher = createEventDispatcher();
 
-    function mouseup(e) {
-        moving = false;
+function mouseup(e) {
+    moving = false;
+}
+
+function mousemove(e) {
+    if (moving && height !== undefined) {
+        height = Math.max(height + e.movementY * -1, 0);
+        dispatcher('change', height);
     }
+}
 
-    function mousemove(e) {
-        if (moving && height !== undefined) {
-            height = Math.max(height + e.movementY * -1, 0);
-            dispatcher('change', height);
-        }
-    }
+onMount(() => {
+    addEventListener('mousemove', mousemove);
+    addEventListener('mouseup', mouseup);
+});
 
-    onMount(() => {
-        addEventListener('mousemove', mousemove);
-        addEventListener('mouseup', mouseup);
-    });
-
-    onDestroy(() => {
-        removeEventListener('mousemove', mousemove);
-        removeEventListener('mouseup', mouseup);
-    });
+onDestroy(() => {
+    removeEventListener('mousemove', mousemove);
+    removeEventListener('mouseup', mouseup);
+});
 </script>
 
 <div

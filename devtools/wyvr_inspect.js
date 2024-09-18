@@ -25,7 +25,7 @@ export default {
         } else {
             close();
         }
-    },
+    }
 };
 
 function close() {

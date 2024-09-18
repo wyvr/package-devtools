@@ -1,56 +1,48 @@
 <script>
-    import {
-        get_ext_color,
-        get_ext_icon,
-        get_folder_color,
-        get_folder_icon,
-    } from './helper.js';
+import { get_ext_color, get_ext_icon, get_folder_color, get_folder_icon } from './helper.js';
 
-    export let file;
-    export let level = 0;
-    export let is_folder = false;
-    export let highlight = undefined;
+export let file;
+export let level = 0;
+export let is_folder = false;
+export let highlight = undefined;
 
-    let ext = file?.name.split('.').pop();
+let ext = file?.name.split('.').pop();
 
-    function get_icon(ext) {
-        if (is_folder) {
-            if (level == 1) {
-                return get_folder_icon(file.name);
-            }
-            return get_folder_icon();
+function get_icon(ext) {
+    if (is_folder) {
+        if (level == 1) {
+            return get_folder_icon(file.name);
         }
-        return get_ext_icon(ext);
+        return get_folder_icon();
+    }
+    return get_ext_icon(ext);
+}
+
+function get_color(ext) {
+    if (is_folder) {
+        if (level == 1) {
+            return get_folder_color(file.name);
+        }
+        return get_folder_color();
     }
 
-    function get_color(ext) {
-        if (is_folder) {
-            if (level == 1) {
-                return get_folder_color(file.name);
-            }
-            return get_folder_color();
-        }
+    return get_ext_color(ext);
+}
 
-        return get_ext_color(ext);
+function get_text(text, highlight) {
+    text = text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    if (highlight) {
+        text = text.replace(new RegExp(`(${highlight})`, 'gi'), '<span class="highlight">$1</span>');
     }
-
-    function get_text(text, highlight) {
-        text = text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        if (highlight) {
-            text = text.replace(
-                new RegExp('(' + highlight + ')', 'gi'),
-                '<span class="highlight">$1</span>',
-            );
-        }
-        if (text.match(/^".*"$/)) {
-            return text;
-        }
+    if (text.match(/^".*"$/)) {
         return text;
     }
+    return text;
+}
 
-    function select(data) {
-        trigger('wyvr_file_manager_select', { data });
-    }
+function select(data) {
+    trigger('wyvr_file_manager_select', { data });
+}
 </script>
 
 <div class="file">

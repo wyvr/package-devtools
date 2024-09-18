@@ -23,12 +23,15 @@ export default {
                 wyvr_message('no breakpoints available');
                 return;
             }
-            component = new Breakpoints({ target, props: { breakpoints: width_breakpoints } });
+            component = new Breakpoints({
+                target,
+                props: { breakpoints: width_breakpoints }
+            });
         } else {
             is_active = false;
             component.$destroy();
         }
-    },
+    }
 };
 
 function get_breakpoints() {
