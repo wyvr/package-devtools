@@ -1,22 +1,20 @@
 <script>
-    export let breakpoints = [];
+export let breakpoints = [];
 
-    let css;
-    let entries = [];
-    $: {
-        const bp = breakpoints.sort().reverse();
+let css;
+let entries = [];
+$: {
+    const bp = breakpoints.sort().reverse();
 
-        entries = bp.map((position, index) => {
-            return { position, color: '#6d8ddf', index };
-        });
+    entries = bp.map((position, index) => {
+        return { position, color: '#6d8ddf', index };
+    });
 
-        const lines = entries
-            .map((entry) => `linear-gradient(to right, ${entry.color} 1px, transparent 1px, transparent)`)
-            .join(',');
-        const positions = bp.map((width) => `${width}px 0`).join(',');
+    const lines = entries.map((entry) => `linear-gradient(to right, ${entry.color} 1px, transparent 1px, transparent)`).join(',');
+    const positions = bp.map((width) => `${width}px 0`).join(',');
 
-        css = `--breakpoint-lines: ${lines}; --breakpoint-positions: ${positions};`;
-    }
+    css = `--breakpoint-lines: ${lines}; --breakpoint-positions: ${positions};`;
+}
 </script>
 
 <div class="container" style={css}>

@@ -16,6 +16,5 @@ export default {
         ct.classList.add('ct');
         document.head.appendChild(ct);
         wyvr_message('added ct.css');
-    },
+    }
 };
-        

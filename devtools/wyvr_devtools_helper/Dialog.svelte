@@ -1,46 +1,46 @@
 <script>
-    import { createEventDispatcher, onDestroy, onMount } from 'svelte';
-    const dispatcher = createEventDispatcher();
+import { createEventDispatcher, onDestroy, onMount } from 'svelte';
+const dispatcher = createEventDispatcher();
 
-    export let show = false;
-    let open = true;
-    let x = 10;
-    let y = 10;
-    let container;
-    onMount(() => {
-        addEventListener('mousemove', mousemove);
-        addEventListener('mouseup', mouseup);
-    });
-    onDestroy(() => {
-        removeEventListener('mousemove', mousemove);
-        removeEventListener('mouseup', mouseup);
-    });
+export let show = false;
+let open = true;
+let x = 10;
+let y = 10;
+let container;
+onMount(() => {
+    addEventListener('mousemove', mousemove);
+    addEventListener('mouseup', mouseup);
+});
+onDestroy(() => {
+    removeEventListener('mousemove', mousemove);
+    removeEventListener('mouseup', mouseup);
+});
 
-    function toggle() {
-        open = !open;
-        setTimeout(() => moveto(x, y), 10);
-    }
+function toggle() {
+    open = !open;
+    setTimeout(() => moveto(x, y), 10);
+}
 
-    let moving = false;
-    function mouseup(e) {
-        moving = false;
+let moving = false;
+function mouseup(e) {
+    moving = false;
+}
+function mousemove(e) {
+    if (moving) {
+        moveto(x + e.movementX, y + e.movementY);
     }
-    function mousemove(e) {
-        if (moving) {
-            moveto(x + e.movementX, y + e.movementY);
-        }
+}
+function moveto(new_x, new_y) {
+    const rect = container?.getBoundingClientRect();
+    x = Math.max(Math.min(new_x, window.innerWidth - rect.width), 0);
+    y = Math.max(Math.min(new_y, window.innerHeight - rect.height), 0);
+}
+function visible_css(value) {
+    if (!value) {
+        return 'display:none;';
     }
-    function moveto(new_x, new_y) {
-        const rect = container?.getBoundingClientRect();
-        x = Math.max(Math.min(new_x, window.innerWidth - rect.width), 0);
-        y = Math.max(Math.min(new_y, window.innerHeight - rect.height), 0);
-    }
-    function visible_css(value) {
-        if (!value) {
-            return 'display:none;';
-        }
-        return '';
-    }
+    return '';
+}
 </script>
 
 <svelte:window

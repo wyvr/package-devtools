@@ -1,5 +1,5 @@
 export function get_ext(value) {
-    if(!value) {
+    if (!value) {
         return '';
     }
     const result = value.split('.').pop();
@@ -29,18 +29,7 @@ export function get_folder_icon(name) {
 }
 
 export function get_folder_color(name) {
-    if (
-        [
-            'assets',
-            'cron',
-            'devtools',
-            'i18n',
-            'pages',
-            'plugins',
-            'routes',
-            'src',
-        ].includes(name)
-    ) {
+    if (['assets', 'cron', 'devtools', 'i18n', 'pages', 'plugins', 'routes', 'src'].includes(name)) {
         return 'var(--wyvr-debug-primary)';
     }
     return '#fff';

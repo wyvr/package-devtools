@@ -1,29 +1,29 @@
 <script>
-    import { createEventDispatcher, onDestroy, onMount } from 'svelte';
-    import Tabs from './Tabs.svelte';
-    import Drag from './Drag.svelte';
-    const dispatcher = createEventDispatcher();
+import { createEventDispatcher, onDestroy, onMount } from 'svelte';
+import Tabs from './Tabs.svelte';
+import Drag from './Drag.svelte';
+const dispatcher = createEventDispatcher();
 
-    export let tabs = [];
-    export let search = false;
-    export let height = 200;
+export let tabs = [];
+export let search = false;
+export let height = 200;
 
-    let el;
+let el;
 
-    onMount(() => {
-        update_height(el);
-    });
-    onDestroy(() => {
-        update_height();
-    });
+onMount(() => {
+    update_height(el);
+});
+onDestroy(() => {
+    update_height();
+});
 
-    function update_height(el) {
-        if (el) {
-            document.body.style.paddingBottom = `${el.offsetHeight}px`;
-        } else {
-            document.body.style.paddingBottom = '';
-        }
+function update_height(el) {
+    if (el) {
+        document.body.style.paddingBottom = `${el.offsetHeight}px`;
+    } else {
+        document.body.style.paddingBottom = '';
     }
+}
 </script>
 
 <div class="grid" bind:this={el}>

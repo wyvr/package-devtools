@@ -1,53 +1,53 @@
 <script>
-    import { createEventDispatcher, onMount } from 'svelte';
-    import Folder from './folder/Folder.svelte';
-    const dispatcher = createEventDispatcher();
+import { createEventDispatcher, onMount } from 'svelte';
+import Folder from './folder/Folder.svelte';
+const dispatcher = createEventDispatcher();
 
-    export let data;
-    export let highlight = undefined;
-    export let packages = [];
+export let data;
+export let highlight = undefined;
+export let packages = [];
 
-    let selected_packages = {};
-    let inited = false;
+let selected_packages = {};
+let inited = false;
 
-    onMount(() => {});
+onMount(() => {});
 
-    $: {
-        if (packages?.length && !inited) {
-            inited = true;
-            const new_packages = {};
-            packages.forEach((pkg) => {
-                new_packages[pkg.name] = true;
-            });
-            selected_packages = new_packages;
-        }
-    }
-
-    $: tree = list_to_tree(data);
-
-    function list_to_tree(list) {
-        const tree = {};
-        if (!list) {
-            return tree;
-        }
-        list.forEach((path) => {
-            const parts = path.split('/');
-            const last_index = parts.length - 1;
-            let current = tree;
-            parts.forEach((part, index) => {
-                if (index == last_index) {
-                    current[part] = path;
-                    return;
-                }
-
-                if (!current[part]) {
-                    current[part] = {};
-                }
-                current = current[part];
-            });
+$: {
+    if (packages?.length && !inited) {
+        inited = true;
+        const new_packages = {};
+        packages.forEach((pkg) => {
+            new_packages[pkg.name] = true;
         });
+        selected_packages = new_packages;
+    }
+}
+
+$: tree = list_to_tree(data);
+
+function list_to_tree(list) {
+    const tree = {};
+    if (!list) {
         return tree;
     }
+    list.forEach((path) => {
+        const parts = path.split('/');
+        const last_index = parts.length - 1;
+        let current = tree;
+        parts.forEach((part, index) => {
+            if (index == last_index) {
+                current[part] = path;
+                return;
+            }
+
+            if (!current[part]) {
+                current[part] = {};
+            }
+            current = current[part];
+        });
+    });
+    return tree;
+}
 </script>
 
 {#if packages}
