@@ -1,108 +1,109 @@
 <script>
-    import { onMount, onDestroy } from 'svelte';
-    import BottomWindow from './wyvr_devtools_helper/BottomWindow.svelte';
-    import Loader from './wyvr_devtools_helper/Loader.svelte';
-    import Folder from './wyvr_devtools_helper/Folder.svelte';
-    import Dialog from './wyvr_devtools_helper/Dialog.svelte';
-    import Detail from './wyvr_file_manager/Detail.svelte';
+import { onMount, onDestroy } from 'svelte';
+import BottomWindow from './wyvr_devtools_helper/BottomWindow.svelte';
+import Loader from './wyvr_devtools_helper/Loader.svelte';
+import Folder from './wyvr_devtools_helper/Folder.svelte';
+import Dialog from './wyvr_devtools_helper/Dialog.svelte';
+import Detail from './wyvr_file_manager/Detail.svelte';
 
-    let packages = undefined;
-    let package_tree = undefined;
-    let init_files = undefined;
-    let state = undefined;
-    let term = undefined;
-    let searching = false;
-    let show_dialog = false;
+let packages = undefined;
+let package_tree = undefined;
+let init_files = undefined;
+let state = undefined;
+let term = undefined;
+let searching = false;
+let show_dialog = false;
 
-    let selected_file;
-    let selected_pkg;
-    let selected_package_filter = undefined;
+let selected_file;
+let selected_pkg;
+let selected_package_filter = undefined;
 
-    onMount(() => {
-        on('wyvr_devtools_get_config_cache_result', (data) => {
-            if (data.key == 'config') {
-                packages = config_to_packages(data.value);
-            } else if (data.key == 'package_tree') {
-                package_tree = data.value;
-                init_files = config_to_list(package_tree);
-            }
-        });
-        trigger('wyvr_devtools_get_config_cache', 'config');
-        trigger('wyvr_devtools_get_config_cache', 'package_tree');
-        on('wyvr_file_manager_select', (e) => {
-            selected_file = e.data;
-            selected_pkg = package_tree[e.data];
-            show_dialog = true;
-        });
-    });
-
-    onDestroy(() => {
-        off('wyvr_devtools_get_config_cache_result');
-        off('wyvr_file_manager_select');
-    });
-
-    $: files = filter_packages(
-        term
-            ? init_files.filter((path) => {
-                  if (!term) return true;
-                  return path.toLowerCase().includes(term.toLowerCase());
-              })
-            : init_files,
-        selected_package_filter,
-    );
-
-    function get_npm_link(path) {
-        if (!path) return '';
-        return `https://www.npmjs.com/search?q=${encodeURIComponent(
-            path.split('/').slice(0, 2).join('/'),
-        )}`;
-    }
-
-    function config_to_packages(config) {
-        if (!Array.isArray(config?.packages)) {
-            return [];
+onMount(() => {
+    on('wyvr_devtools_action_result', (data) => {
+        switch (data.action) {
+            case 'config':
+                packages = config_to_packages(data.data);
+                break;
+            case 'package_tree':
+                package_tree = data.data;
+                init_files = config_to_list(data.data);
+                break;
         }
-        return config.packages.map((pkg) => {
-            const pattern = '/node_modules/';
-            const npm_index = pkg.path.indexOf(pattern);
-            if (npm_index > -1) {
-                pkg.type = 'npm';
-                pkg.path = pkg.path.substr(npm_index + pattern.length);
-            } else {
-                pkg.type = 'local';
-            }
-            return pkg;
-        });
-    }
+    });
+    trigger('wyvr_devtools_action', { type: 'config' });
+    trigger('wyvr_devtools_action', { type: 'package_tree' });
+    on('wyvr_file_manager_select', (e) => {
+        selected_file = e.data;
+        selected_pkg = package_tree[e.data];
+        show_dialog = true;
+    });
+});
 
-    function config_to_list(config) {
-        if (!config) {
-            return [];
-        }
-        return Object.keys(config).filter(Boolean);
-    }
+onDestroy(() => {
+    off('wyvr_devtools_action_result');
+    off('wyvr_file_manager_select');
+});
 
-    function update_package_filter(e) {
-        const active = Object.keys(e.detail).filter((key) => e.detail[key]);
-        if (active.length == packages.length) {
-            selected_package_filter = undefined;
+$: files = filter_packages(
+    term
+        ? init_files.filter((path) => {
+              if (!term) return true;
+              return path.toLowerCase().includes(term.toLowerCase());
+          })
+        : init_files,
+    selected_package_filter
+);
+
+function get_npm_link(path) {
+    if (!path) return '';
+    return `https://www.npmjs.com/search?q=${encodeURIComponent(path.split('/').slice(0, 2).join('/'))}`;
+}
+
+function config_to_packages(config) {
+    if (!Array.isArray(config?.packages)) {
+        return [];
+    }
+    return config.packages.map((pkg) => {
+        const pattern = '/node_modules/';
+        const npm_index = pkg.path.indexOf(pattern);
+        if (npm_index > -1) {
+            pkg.type = 'npm';
+            pkg.path = pkg.path.substr(npm_index + pattern.length);
         } else {
-            selected_package_filter = active;
+            pkg.type = 'local';
         }
-    }
+        return pkg;
+    });
+}
 
-    function filter_packages(files, selected_package_filter) {
-        if (selected_package_filter == undefined) {
-            return files;
-        }
-        return files.filter((file) => {
-            const pkg = package_tree[file];
-            if (!pkg) {
-                return false;
-            }
-            return selected_package_filter.includes(pkg.name);
-        });
+function config_to_list(config) {
+    if (!config) {
+        return [];
     }
+    return Object.keys(config).filter(Boolean);
+}
+
+function update_package_filter(e) {
+    const active = Object.keys(e.detail).filter((key) => e.detail[key]);
+    if (active.length == packages.length) {
+        selected_package_filter = undefined;
+    } else {
+        selected_package_filter = active;
+    }
+}
+
+function filter_packages(files, selected_package_filter) {
+    if (selected_package_filter == undefined) {
+        return files;
+    }
+    return files.filter((file) => {
+        const pkg = package_tree[file];
+        if (!pkg) {
+            return false;
+        }
+        return selected_package_filter.includes(pkg.name);
+    });
+}
 </script>
 
 <BottomWindow

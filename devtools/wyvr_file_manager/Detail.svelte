@@ -1,73 +1,71 @@
 <script>
-    import Loader from './../wyvr_devtools_helper/Loader.svelte';
-    import {
-        get_ext_color,
-        get_ext_icon,
-        get_ext,
-    } from './../wyvr_devtools_helper/folder/helper.js';
+import Loader from './../wyvr_devtools_helper/Loader.svelte';
+import { get_ext_color, get_ext_icon, get_ext } from './../wyvr_devtools_helper/folder/helper.js';
 
-    export let file = undefined;
-    export let pkg = undefined;
-    export let packages = undefined;
+export let file = undefined;
+export let pkg = undefined;
+export let packages = undefined;
 
-    let debouncer;
+let debouncer;
 
-    let copy_package;
-    let state = 'idle';
+let copy_package;
+let state = 'idle';
 
-    $: is_npm = pkg?.path.indexOf('/node_modules/') > -1;
-    $: pkg_index = packages?.findIndex((p) => p.name == pkg?.name) ?? -1;
-    $: copyable_packages = packages?.slice(0, pkg_index).filter((pkg) => {
-        return pkg.type == 'local';
+$: is_npm = pkg?.path.indexOf('/node_modules/') > -1;
+$: pkg_index = packages?.findIndex((p) => p.name === pkg?.name) ?? -1;
+$: copyable_packages = packages?.slice(0, pkg_index).filter((pkg) => {
+    return pkg.type === 'local';
+});
+
+$: update_state(file, pkg);
+
+function update_state() {
+    state = 'idle';
+}
+
+function join(...parts) {
+    return parts.filter(Boolean).join('/').replace(/\/+/g, '/');
+}
+
+function copy() {
+    const to_path = packages.find((pkg) => pkg.name === copy_package)?.path;
+    if (!to_path || !file || !pkg.path) {
+        wyvr_message('error while copying file');
+        return;
+    }
+    trigger('wyvr_devtools_action', {
+        type: 'file_system',
+        action: 'copy',
+        path: join(pkg.path, file),
+        to: join(to_path, file)
     });
-
-    $: update_state(file, pkg);
-
-    function update_state() {
-        state = 'idle';
+    update_package_tree();
+    wyvr_message('copying file');
+}
+function remove() {
+    if (!file || !pkg.path) {
+        wyvr_message('error while deleting file');
+        return;
     }
-
-    function join(...parts) {
-        return parts.filter(Boolean).join('/').replace(/\/+/g, '/');
-    }
-
-    function copy() {
-        const to_path = packages.find((pkg) => pkg.name === copy_package)?.path;
-        if (!to_path || !file || !pkg.path) {
-            wyvr_message('error while copying file');
-            return;
-        }
-        trigger('wyvr_devtools_file_system', {
-            action: 'copy',
-            path: join(pkg.path, file),
-            to: join(to_path, file),
-        });
-        update_package_tree();
-        wyvr_message('copying file');
-    }
-    function remove() {
-        if (!file || !pkg.path) {
-            wyvr_message('error while deleting file');
-            return;
-        }
-        trigger('wyvr_devtools_file_system', {
-            action: 'delete',
-            path: join(pkg.path, file),
-        });
-        update_package_tree();
-        wyvr_message('deleting file');
-    }
-    function update_package_tree() {
-        state = 'busy';
-        clearTimeout(debouncer);
-        debouncer = setTimeout(() => {
-            trigger('wyvr_devtools_get_config_cache', 'package_tree');
-            // update seleted file
-            setTimeout(() => {
-                trigger('wyvr_file_manager_select', { data: file });
-            }, 1000);
+    trigger('wyvr_devtools_action', {
+        type: 'file_system',
+        action: 'delete',
+        path: join(pkg.path, file)
+    });
+    update_package_tree();
+    wyvr_message('deleting file');
+}
+function update_package_tree() {
+    state = 'busy';
+    clearTimeout(debouncer);
+    debouncer = setTimeout(() => {
+        trigger('wyvr_devtools_action', { type: 'package_tree' });
+        // update seleted file
+        setTimeout(() => {
+            trigger('wyvr_file_manager_select', { data: file });
         }, 1000);
-    }
+    }, 1000);
+}
 </script>
 
 <div class="block">

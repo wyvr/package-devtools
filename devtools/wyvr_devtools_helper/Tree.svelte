@@ -1,111 +1,109 @@
 <script>
-    export let data;
-    export let path = '';
-    export let highlight = undefined;
-    export let searching = false;
-    export let open = false;
+export let data;
+export let path = '';
+export let highlight = undefined;
+export let searching = false;
+export let open = false;
 
-    $: tree = to_tree(data);
+$: tree = to_tree(data);
+$: empty = tree.length === 0;
 
-    $: update_open(searching);
+$: update_open(searching);
 
-    function to_tree(data) {
-        if (!data) {
-            return [];
-        }
-        if (Array.isArray(data)) {
-            return data.map((item, index) => to_item(item, index.toString()));
-        }
-        return Object.keys(data)
-            .map((key) => to_item(data[key], key))
-            .sort((a, b) => {
-                if (a.key < b.key) {
-                    return -1;
-                }
-                if (a.key > b.key) {
-                    return 1;
-                }
-                return 0;
-            });
+function to_tree(data) {
+    if (!data) {
+        return [];
     }
-    function to_item(value, key) {
-        const type = Array.isArray(value) ? 'array' : typeof value;
-        return { key, value, type };
+    if (Array.isArray(data)) {
+        return data.map((item, index) => to_item(item, index.toString()));
     }
-    function get_path(path, segment) {
-        if (!isNaN(segment)) {
-            return path + '[' + segment + ']';
-        }
-        return [path, segment].filter((x) => x).join('.');
-    }
-
-    function get_type_icon(type, value) {
-        switch (type) {
-            case 'string':
-                return 'T';
-            case 'number':
-                return 'N';
-            case 'boolean':
-                return '☑';
-            case 'array':
-                return `[${value ? value.length : '0'}]`;
-            case 'object':
-            case 'undefined':
-                if (value == null) {
-                    return '✘';
-                }
-                return '{…}';
-            default:
-                return '?';
-        }
-    }
-    
-    function toggle() {
-        open = !open;
-    }
-
-    function copy(text) {
-        if (typeof text == 'string') {
-            text = text.replace(/^"(.*)"$/, '$1');
-        }
-        navigator.clipboard.writeText(text).then(() => {
-            wyvr_message('copied to clipboard');
+    return Object.keys(data)
+        .map((key) => to_item(data[key], key))
+        .sort((a, b) => {
+            if (a.key < b.key) {
+                return -1;
+            }
+            if (a.key > b.key) {
+                return 1;
+            }
+            return 0;
         });
+}
+function to_item(value, key) {
+    const type = Array.isArray(value) ? 'array' : typeof value;
+    return { key, value, type };
+}
+function get_path(path, segment) {
+    if (!Number.isNaN(segment)) {
+        return `${path}[${segment}]`;
     }
-    function copy_pre(e) {
-        const pre = e.target.parentNode.querySelector('pre');
-        if (!pre) {
-            return;
-        }
-        copy(pre.innerText);
+    return [path, segment].filter((x) => x).join('.');
+}
+
+function get_type_icon(type, value) {
+    switch (type) {
+        case 'string':
+            return 'T';
+        case 'number':
+            return 'N';
+        case 'boolean':
+            return '☑';
+        case 'array':
+            return `[${value ? value.length : '0'}]`;
+        case 'object':
+        case 'undefined':
+            if (value == null) {
+                return '✘';
+            }
+            return '{…}';
+        default:
+            return '?';
     }
-    function get_text(text, highlight) {
-        text = text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        if (highlight) {
-            text = text.replace(
-                new RegExp('(' + highlight + ')', 'gi'),
-                '<span class="highlight">$1</span>',
-            );
-        }
-        if (text.match(/^".*"$/)) {
-            return text;
-        }
-        text = `<code>${text}</code>`;
+}
+
+function toggle() {
+    open = !open;
+}
+
+function copy(text) {
+    if (typeof text === 'string') {
+        text = text.replace(/^"(.*)"$/, '$1');
+    }
+    navigator.clipboard.writeText(text).then(() => {
+        wyvr_message('copied to clipboard');
+    });
+}
+function copy_pre(e) {
+    const pre = e.target.parentNode.querySelector('pre');
+    if (!pre) {
+        return;
+    }
+    copy(pre.innerText);
+}
+function get_text(text, highlight) {
+    text = text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    if (highlight) {
+        text = text.replace(new RegExp(`(${highlight})`, 'gi'), '<span class="highlight">$1</span>');
+    }
+    if (text.match(/^".*"$/)) {
         return text;
     }
-    function update_open(searching) {
-        if (searching) {
-            open = true;
-        }
+    text = `<code>${text}</code>`;
+    return text;
+}
+function update_open(searching) {
+    if (searching) {
+        open = true;
     }
+}
 </script>
 
 <div class="tree">
     <div class="main">
-        <button on:click={toggle} class="btn"
-            >{#if open}-{:else}+{/if}</button
-        ><slot />
-    </div>
+        {#if !empty}<button on:click={toggle} class="btn">{#if open}-{:else}+{/if}</button>{/if}
+        <slot />
+        {#if empty}<em>has no data</em>{/if}    
+</div>
     {#if open}
         {#each tree as node}
             {@const cur_path = get_path(path, node.key, node.type)}
@@ -188,8 +186,6 @@
         width: 100%;
         align-items: baseline;
         position: relative;
-    }
-    .node:hover {
     }
     .node:before {
         content: '';
