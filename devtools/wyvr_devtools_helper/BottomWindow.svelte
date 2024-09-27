@@ -9,6 +9,7 @@ export let search = false;
 export let height = 200;
 
 let el;
+let tab;
 
 onMount(() => {
     update_height(el);
@@ -39,12 +40,13 @@ function update_height(el) {
         {search}
         on:change={(e) => {
             dispatcher('tab', e.detail);
+            tab = tabs.find((t) => t.value === e.detail);
         }}
         on:search={(e) => dispatcher('search', e.detail)}
         on:close={() => dispatcher('close')}
     />
     <div class="content" style="--height: {height}px;">
-        <slot />
+        <slot {tab} />
     </div>
 </div>
 
