@@ -14,7 +14,7 @@ const coreMetricsName = {
     TBT: 'Total Blocking Time'
 };
 
-let core = {};
+const core = {};
 let coreKeys = [];
 
 let entries = [];
@@ -33,10 +33,8 @@ onMount(() => {
         analyticsTracker: (options) => {
             // detect core metrics
             if (coreMetrics.indexOf(options.metricName) > -1) {
-                console.log('CORE');
                 console.log(options);
                 core[options.metricName] = options;
-                core = core;
                 coreKeys = Object.keys(core);
                 return;
             }
