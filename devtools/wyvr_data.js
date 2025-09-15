@@ -22,7 +22,7 @@ export default {
             is_active = true;
             target = document.createElement('div');
             target.classList.add('wyvr_data');
-            document.body.appendChild(target);
+            wyvrDebugToolbar.appendChild(target);
             component = new Data({ target });
         } else {
             close();

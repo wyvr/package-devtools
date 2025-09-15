@@ -22,7 +22,7 @@ export default {
             is_active = true;
             target = document.createElement('div');
             target.classList.add('wyvr_file_manager');
-            document.body.appendChild(target);
+            wyvrDebugToolbar.appendChild(target);
             component = new FileManager({ target });
         } else {
             close();

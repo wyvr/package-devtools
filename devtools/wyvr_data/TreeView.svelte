@@ -162,8 +162,6 @@
     }
 </script>
 
-{JSON.stringify(term)}
-
 {#if tab}
     {#if state == 'busy'}
         <Loader></Loader>

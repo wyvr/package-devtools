@@ -17,7 +17,7 @@ export default {
         if (is_active) {
             target = document.createElement('div');
             target.classList.add('wyvr_measure');
-            document.body.appendChild(target);
+            wyvrDebugToolbar.appendChild(target);
             component = new Toolbar({ target });
             on('wyvr_measure_close', () => {
                 close();
