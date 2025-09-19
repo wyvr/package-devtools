@@ -91,6 +91,14 @@ function get_text(text, highlight) {
     text = `<code>${text}</code>`;
     return text;
 }
+function get_key(key, highlight) {
+
+    const text = get_text(key, highlight);   
+    if(['$wyvr', '$route', '$uid'].includes(key)) {
+        return `<span class="magic"><i class="ri-sparkling-line"></i> ${text}</span>`;
+    }
+    return text;
+}
 function update_open(searching) {
     if (searching) {
         open = true;
@@ -115,7 +123,7 @@ function update_open(searching) {
                         copy(cur_path);
                     }}
                 >
-                    {@html get_text(node.key, highlight)}
+                    {@html get_key(node.key, highlight)}
                     <span class="icon"
                         >{get_type_icon(node.type, node.value)}</span
                     >
@@ -221,6 +229,10 @@ function update_open(searching) {
         color: var(--wyvr-debug-text-shadow);
         font-size: 1rem;
         cursor: pointer;
+    }
+    .key :global(.magic) {
+        font-weight: bold;
+        color: color-mix(in srgb, var(--wyvr-debug-text-shadow) 20%, var(--wyvr-debug-primary));
     }
     .icon {
         font-family: serif;
