@@ -117,6 +117,6 @@ function reset_data() {
         outline: 2px solid var(--wyvr-inspect-outline-active);
     }
     :global(.wyvr_inspect_active) {
-        outline: 2px solid var(--wyvr-debug-primary) !important;
+        outline: 2px solid #6d8ddf !important;
     }
 </style>
